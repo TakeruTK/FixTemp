@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseGuard — Ranking de Equipos</title>
+<style>
+  :root {
+    --bg: #0a0f1a; --surface: #0f172a; --card: #1a2335;
+    --border: #1e2d45; --accent: #b9f65c; --accent2: #42e6f5;
+    --text: #e2e8f0; --muted: #64748b; --danger: #f87171;
+    --gold: #fbbf24; --silver: #94a3b8; --bronze: #cd7f32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh }
+
+  /* Header */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem }
+  .logo { display: flex; align-items: center; gap: 0.6rem }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center }
+  .logo-icon svg { fill: #0a0f1a }
+  .logo h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em }
+  .logo span { font-size: 0.75rem; color: var(--muted); font-weight: 400 }
+  .header-actions { margin-left: auto; display: flex; gap: 0.75rem }
+  .btn { padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s }
+  .btn:hover { opacity: 0.85 }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text) }
+  .btn-accent { background: var(--accent); color: #0a0f1a }
+
+  /* Stats bar */
+  .stats-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; gap: 2rem; flex-wrap: wrap }
+  .stat { display: flex; flex-direction: column }
+  .stat-val { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em }
+  .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em }
+  .stat-val.green { color: var(--accent) }
+  .stat-val.blue { color: var(--accent2) }
+
+  /* Main */
+  .main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem }
+  .section-title { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem }
+
+  /* Table */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 2rem }
+  .table-head { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center }
+  .table-head h2 { font-size: 0.9rem; font-weight: 600 }
+  table { width: 100%; border-collapse: collapse }
+  thead th { padding: 0.7rem 1rem; text-align: left; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: #111827 }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s }
+  tbody tr:last-child { border-bottom: none }
+  tbody tr:hover { background: rgba(255,255,255,0.02) }
+  td { padding: 0.75rem 1rem; font-size: 0.85rem }
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-weight: 800; font-size: 0.8rem }
+  .rank-1 { background: rgba(251,191,36,0.15); color: var(--gold); border: 1px solid rgba(251,191,36,0.3) }
+  .rank-2 { background: rgba(148,163,184,0.15); color: var(--silver); border: 1px solid rgba(148,163,184,0.3) }
+  .rank-3 { background: rgba(205,127,50,0.12); color: var(--bronze); border: 1px solid rgba(205,127,50,0.3) }
+  .rank-n { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border) }
+  .score-bar { display: flex; align-items: center; gap: 0.6rem }
+  .score-num { font-weight: 700; font-size: 1rem; min-width: 2.5rem }
+  .bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; max-width: 80px }
+  .bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)) }
+  .chip { display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.72rem; color: var(--muted) }
+  .coverage { font-size: 0.78rem; color: var(--muted) }
+
+  /* Pagination */
+  .pagination { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1.5rem }
+  .page-btn { padding: 0.4rem 0.9rem; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.82rem }
+  .page-btn:hover { border-color: var(--accent) }
+  .page-btn.active { background: var(--accent); color: #0a0f1a; border-color: var(--accent); font-weight: 700 }
+
+  /* Loading */
+  .loading { text-align: center; padding: 3rem; color: var(--muted) }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.5rem }
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  /* Empty */
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--muted) }
+  .empty svg { margin-bottom: 1rem; opacity: 0.3 }
+
+  /* Top 3 podium */
+  .podium { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem }
+  .podium-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; position: relative; overflow: hidden }
+  .podium-card.rank-1 { border-color: rgba(251,191,36,0.3); background: linear-gradient(135deg, #1a2335, rgba(251,191,36,0.05)) }
+  .podium-card.rank-2 { border-color: rgba(148,163,184,0.25) }
+  .podium-card.rank-3 { border-color: rgba(205,127,50,0.25) }
+  .podium-pos { font-size: 1.8rem; margin-bottom: 0.5rem }
+  .podium-score { font-size: 2rem; font-weight: 900; letter-spacing: -0.04em }
+  .podium-card.rank-1 .podium-score { color: var(--gold) }
+  .podium-card.rank-2 .podium-score { color: var(--silver) }
+  .podium-card.rank-3 .podium-score { color: var(--bronze) }
+  .podium-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.75rem }
+  .podium-cpu { font-size: 0.78rem; color: var(--text); font-weight: 600 }
+  .podium-gpu { font-size: 0.72rem; color: var(--muted) }
+
+  @media (max-width: 640px) {
+    .header { padding: 0.75rem 1rem }
+    .stats-bar { padding: 0.75rem 1rem; gap: 1rem }
+    .podium { grid-template-columns: 1fr }
+    .main { padding: 1rem }
+    td, th { padding: 0.5rem 0.6rem }
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <div>
+      <h1>PulseGuard</h1>
+      <span>Ranking Global de Equipos</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="/admin" class="btn btn-ghost">Admin</a>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat"><span class="stat-val green" id="statTotal">—</span><span class="stat-label">Equipos registrados</span></div>
+  <div class="stat"><span class="stat-val blue" id="statAvg">—</span><span class="stat-label">Puntuación promedio</span></div>
+  <div class="stat"><span class="stat-val" id="statMax">—</span><span class="stat-label">Puntuación máxima</span></div>
+  <div class="stat"><span class="stat-val" id="statMin">—</span><span class="stat-label">Puntuación mínima</span></div>
+</div>
+
+<main class="main">
+  <div id="podium" style="display:none">
+    <p class="section-title">🏆 Top 3 equipos</p>
+    <div class="podium" id="podiumCards"></div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-head">
+      <h2>Ranking completo</h2>
+      <span class="chip" id="pageInfo">—</span>
+    </div>
+    <div id="tableContent">
+      <div class="loading"><div class="spinner"></div><p>Cargando ranking…</p></div>
+    </div>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<script>
+const PAGE_SIZE = 20
+let currentPage = 0
+let totalRows = 0
+
+async function load(page = 0) {
+  currentPage = page
+  const offset = page * PAGE_SIZE
+  try {
+    const [rankRes, statsRes] = await Promise.all([
+      fetch(`/api/rankings?limit=${PAGE_SIZE}&offset=${offset}`),
+      fetch('/api/stats')
+    ])
+    const { total, rows } = await rankRes.json()
+    const { stats } = await statsRes.json()
+    totalRows = total
+    renderStats(stats, total)
+    renderTable(rows, offset)
+    renderPodium(rows, offset)
+    renderPagination(total, page)
+  } catch (err) {
+    document.getElementById('tableContent').innerHTML = `<div class="empty"><p>Error al cargar datos: ${err.message}</p></div>`
+  }
+}
+
+function renderStats(stats, total) {
+  document.getElementById('statTotal').textContent = total.toLocaleString('es')
+  document.getElementById('statAvg').textContent = stats.avg ? stats.avg.toFixed(1) : '—'
+  document.getElementById('statMax').textContent = stats.max ? stats.max.toFixed(1) : '—'
+  document.getElementById('statMin').textContent = stats.min ? stats.min.toFixed(1) : '—'
+}
+
+function renderPodium(rows, offset) {
+  if (offset !== 0 || rows.length < 3) return
+  const podium = document.getElementById('podium')
+  const cards = document.getElementById('podiumCards')
+  podium.style.display = 'block'
+  const top3 = rows.slice(0, 3)
+  const medals = ['🥇', '🥈', '🥉']
+  const rankClass = ['rank-1', 'rank-2', 'rank-3']
+  cards.innerHTML = top3.map((r, i) => `
+    <div class="podium-card ${rankClass[i]}">
+      <div class="podium-pos">${medals[i]}</div>
+      <div class="podium-score">${r.score.toFixed(1)}</div>
+      <div class="podium-label">puntuación</div>
+      <div class="podium-cpu">${r.cpu_model || '—'}</div>
+      <div class="podium-gpu">${r.gpu_model || ''}</div>
+      <div style="margin-top:0.5rem"><span class="chip">${r.ram_gb ? r.ram_gb + ' GB RAM' : ''}</span></div>
+    </div>
+  `).join('')
+}
+
+function renderTable(rows, offset) {
+  document.getElementById('pageInfo').textContent = `${offset + 1}–${offset + rows.length} de ${totalRows}`
+  if (!rows.length) {
+    document.getElementById('tableContent').innerHTML = `
+      <div class="empty">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <p>Aún no hay equipos registrados.</p>
+        <p style="font-size:0.8rem;margin-top:0.5rem">Los equipos aparecen aquí al completar la evaluación completa en PulseGuard.</p>
+      </div>`
+    return
+  }
+
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Puntuación</th>
+          <th>CPU</th>
+          <th>GPU</th>
+          <th>RAM</th>
+          <th>Disco L/E</th>
+          <th>Sistema</th>
+          <th>Cobertura</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const rankN = r.rank
+          const rankBadge = rankN === 1 ? `<span class="rank-badge rank-1">1</span>`
+            : rankN === 2 ? `<span class="rank-badge rank-2">2</span>`
+            : rankN === 3 ? `<span class="rank-badge rank-3">3</span>`
+            : `<span class="rank-badge rank-n">${rankN}</span>`
+          const pct = Math.min(100, Math.round(r.score))
+          const dateStr = r.tested_at ? new Date(r.tested_at).toLocaleDateString('es', { day:'2-digit', month:'short', year:'numeric' }) : '—'
+          const diskStr = (r.disk_read || r.disk_write) ? `${r.disk_read ? Math.round(r.disk_read) : '—'} / ${r.disk_write ? Math.round(r.disk_write) : '—'} MB/s` : '—'
+          return `
+            <tr>
+              <td>${rankBadge}</td>
+              <td>
+                <div class="score-bar">
+                  <span class="score-num">${r.score.toFixed(1)}</span>
+                  <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+                </div>
+              </td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.cpu_model || '—'}</td>
+              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.78rem;color:var(--muted)">${r.gpu_model || '—'}</td>
+              <td>${r.ram_gb ? r.ram_gb + ' GB' : '—'}</td>
+              <td style="font-size:0.78rem">${diskStr}</td>
+              <td><span class="chip">${r.os_name || '—'}</span></td>
+              <td class="coverage">${r.coverage ? r.coverage.toFixed(0) + '%' : '—'}</td>
+              <td style="font-size:0.78rem;color:var(--muted)">${dateStr}</td>
+            </tr>`
+        }).join('')}
+      </tbody>
+    </table>`
+  document.getElementById('tableContent').innerHTML = html
+}
+
+function renderPagination(total, current) {
+  const pages = Math.ceil(total / PAGE_SIZE)
+  if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return }
+  const btns = []
+  for (let i = 0; i < Math.min(pages, 10); i++) {
+    btns.push(`<button class="page-btn ${i === current ? 'active' : ''}" onclick="load(${i})">${i + 1}</button>`)
+  }
+  document.getElementById('pagination').innerHTML = btns.join('')
+}
+
+load()
+// Recarga cada 60s automáticamente
+setInterval(() => load(currentPage), 60000)
+</script>
+</body>
+</html>

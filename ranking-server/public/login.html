@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseGuard Admin · Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body {
+    background: #0a0f1a;
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #0f172a;
+    border: 1px solid #1e2d45;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #b9f65c, #42e6f5);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .logo-text { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em }
+  .logo-sub { font-size: 0.72rem; color: #64748b; margin-top: 0.1rem }
+  .badge {
+    display: inline-block;
+    background: rgba(248,113,113,0.15);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.3);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.5rem;
+  }
+  h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem }
+  .subtitle { font-size: 0.82rem; color: #64748b; margin-bottom: 1.75rem }
+  label { display: block; font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem; letter-spacing: 0.04em }
+  input {
+    width: 100%;
+    background: #1a2335;
+    border: 1px solid #1e2d45;
+    color: #e2e8f0;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 1rem;
+  }
+  input:focus { border-color: #42e6f5 }
+  input::placeholder { color: #334155 }
+  .btn {
+    width: 100%;
+    padding: 0.7rem;
+    background: linear-gradient(135deg, #b9f65c, #42e6f5);
+    color: #0a0f1a;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: opacity 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .btn:hover { opacity: 0.9 }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed }
+  .error {
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: #f87171;
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .back { display: block; text-align: center; margin-top: 1.25rem; font-size: 0.78rem; color: #64748b; text-decoration: none }
+  .back:hover { color: #e2e8f0 }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">PulseGuard</div>
+      <div class="logo-sub">Monitoring System</div>
+    </div>
+  </div>
+  <div class="badge">ADMIN</div>
+  <h1>Panel de administración</h1>
+  <p class="subtitle">Ingresa tus credenciales para continuar</p>
+
+  <form id="loginForm" onsubmit="doLogin(event)">
+    <div class="error" id="errorMsg"></div>
+    <label>USUARIO</label>
+    <input type="text" id="user" placeholder="Admin" autocomplete="username" autofocus>
+    <label>CONTRASEÑA</label>
+    <input type="password" id="pass" placeholder="••••••••" autocomplete="current-password">
+    <button type="submit" class="btn" id="loginBtn">Iniciar sesión</button>
+  </form>
+
+  <a href="/" class="back">← Ver ranking público</a>
+</div>
+
+<script>
+async function doLogin(e) {
+  e.preventDefault()
+  const user = document.getElementById('user').value.trim()
+  const pass = document.getElementById('pass').value
+  const btn = document.getElementById('loginBtn')
+  const err = document.getElementById('errorMsg')
+
+  if (!user || !pass) { showError('Completa los dos campos.'); return }
+
+  btn.disabled = true
+  btn.textContent = 'Verificando…'
+  err.style.display = 'none'
+
+  try {
+    const token = btoa(user + ':' + pass)
+    const res = await fetch('/api/admin/scores?limit=1', {
+      headers: { Authorization: 'Basic ' + token }
+    })
+    if (res.ok) {
+      sessionStorage.setItem('pgAdminToken', token)
+      window.location.href = '/admin-panel'
+    } else {
+      showError('Credenciales incorrectas.')
+    }
+  } catch {
+    showError('No se pudo conectar al servidor.')
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Iniciar sesión'
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg')
+  el.textContent = msg
+  el.style.display = 'block'
+}
+
+// Si ya está autenticado, ir directo al panel
+if (sessionStorage.getItem('pgAdminToken')) {
+  window.location.href = '/admin-panel'
+}
+</script>
+</body>
+</html>

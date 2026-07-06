@@ -1,0 +1,43 @@
+# ── Dependencias ─────────────────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+pnpm.cmd
+
+# ── Build / artefactos generados ──────────────────────────────────────────────
+dist/
+build-server/
+build-server-esm/
+asar-src/
+release/
+release-*/
+
+# ── Distribuciones binarias ───────────────────────────────────────────────────
+portable-060/
+*.exe
+*.AppImage
+*.tar.gz
+*.dmg
+*.zip
+
+# ── .NET sensor-helper builds ─────────────────────────────────────────────────
+sensor-helper/bin/
+sensor-helper/obj/
+sensor-helper/publish/
+
+# ── Datos de usuario / máquina ────────────────────────────────────────────────
+dxdiag.xml
+ranking-server/scores.json
+ranking-server/data/
+ranking-server/updates/
+ranking-server/node_modules/
+
+# ── Logs y temporales ─────────────────────────────────────────────────────────
+*.log
+*.tmp
+TestBeta/
+.agents/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

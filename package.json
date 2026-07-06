@@ -1,0 +1,76 @@
+{
+  "name": "pulseguard-monitor",
+  "version": "0.6.0",
+  "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
+  "author": "PulseGuard",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "dev": "concurrently -k \"node --watch server/server.mjs\" \"vite --host 127.0.0.1\"",
+    "build": "vite build",
+    "start": "node server/server.mjs",
+    "desktop": "electron .",
+    "check": "tsc --noEmit",
+    "test:telemetry": "node tests/telemetry.test.mjs",
+    "test:stress": "node tests/stress-capacity.test.mjs",
+    "test:features": "node tests/stress-telemetry-overlay.test.mjs",
+    "test:pwa": "node tests/pwa.test.mjs",
+    "test:sensors": "node tests/hardware-sensors.test.mjs",
+    "test:inventory": "node tests/inventory.test.mjs",
+    "build:sensors": "dotnet publish sensor-helper/PulseGuard.Sensors.csproj -c Release -r win-x64 --self-contained true -o sensor-helper/publish/win-x64 --no-restore && node sensor-helper/copy-assets.mjs",
+    "bundle:server": "esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs",
+    "dist:win": "vite build && dotnet publish sensor-helper/PulseGuard.Sensors.csproj -c Release -r win-x64 --self-contained true -o sensor-helper/publish/win-x64 --no-restore && node sensor-helper/copy-assets.mjs && esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs && electron-builder --win nsis",
+    "dist:linux": "vite build && esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs && electron-builder --linux AppImage tar.gz"
+  },
+  "devDependencies": {
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "systeminformation": "^5.27.7",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "concurrently": "^9.2.0",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.27.7",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "electron", "electron-builder", "electron-winstaller"]
+  },
+  "build": {
+    "appId": "cl.pulseguard.monitor",
+    "productName": "PulseGuard",
+    "artifactName": "PulseGuard-Setup-${version}.${ext}",
+    "asar": true,
+    "asarUnpack": ["build-server/**/*", "server/system-info.ps1"],
+    "files": ["dist/**/*", "electron/**/*", "build-server/**/*", "server/system-info.ps1", "server/system-details.mjs", "assets/**/*", "package.json"],
+    "directories": { "output": "release", "buildResources": "assets" },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "extraResources": [{ "from": "sensor-helper/publish/win-x64", "to": "sensor-helper" }]
+    },
+    "linux": {
+      "target": ["AppImage", "tar.gz"],
+      "category": "Utility",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "include": "build/installer.nsh",
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PulseGuard",
+      "uninstallDisplayName": "PulseGuard ${version}",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

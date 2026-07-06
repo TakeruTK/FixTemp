@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseGuard Admin</title>
+<style>
+  :root {
+    --bg: #0a0f1a; --surface: #0f172a; --card: #1a2335;
+    --border: #1e2d45; --accent: #b9f65c; --accent2: #42e6f5;
+    --text: #e2e8f0; --muted: #64748b; --danger: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0 }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh }
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem }
+  .badge-admin { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em }
+  .title { font-size: 1rem; font-weight: 700 }
+  a.back { margin-left: auto; color: var(--muted); font-size: 0.82rem; text-decoration: none }
+  a.back:hover { color: var(--text) }
+  .btn-logout { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--danger); padding: 0.35rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-left: 0.5rem }
+  .btn-logout:hover { background: rgba(248,113,113,0.22) }
+  .main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem }
+  .toolbar { display: flex; gap: 0.75rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap }
+  input[type=text] { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.85rem; min-width: 220px; outline: none }
+  input[type=text]:focus { border-color: var(--accent2) }
+  .btn { padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text) }
+  .btn-danger { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: var(--danger) }
+  .stat-row { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.2rem; min-width: 120px }
+  .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--accent) }
+  .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem }
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto }
+  table { width: 100%; border-collapse: collapse; min-width: 900px }
+  thead th { padding: 0.65rem 0.9rem; text-align: left; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: #111827; white-space: nowrap }
+  tbody tr { border-bottom: 1px solid var(--border) }
+  tbody tr:last-child { border-bottom: none }
+  tbody tr:hover { background: rgba(255,255,255,0.02) }
+  td { padding: 0.6rem 0.9rem; font-size: 0.8rem }
+  .score-val { font-weight: 800; font-size: 1rem; color: var(--accent) }
+  .hostname-tag { background: rgba(66,230,245,0.1); border: 1px solid rgba(66,230,245,0.25); color: var(--accent2); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; font-family: monospace }
+  .machine-id { font-family: monospace; font-size: 0.72rem; color: var(--muted) }
+  .del-btn { background: transparent; border: 1px solid rgba(248,113,113,0.25); color: var(--danger); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.72rem }
+  .del-btn:hover { background: rgba(248,113,113,0.1) }
+  .loading { text-align: center; padding: 3rem; color: var(--muted) }
+  .pagination { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1.25rem }
+  .page-btn { padding: 0.4rem 0.8rem; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem }
+  .page-btn.active { background: var(--accent); color: #0a0f1a; border-color: var(--accent); font-weight: 700 }
+  .notes-cell { max-width: 180px; font-size: 0.72rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+</style>
+</head>
+<body>
+<header class="header">
+  <span class="badge-admin">ADMIN</span>
+  <span class="title">PulseGuard — Panel de administración</span>
+  <a href="/" class="back">← Ver ranking público</a>
+  <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+</header>
+<main class="main">
+  <div class="stat-row" id="statRow">
+    <div class="stat"><div class="stat-val" id="aTotal">—</div><div class="stat-label">Total equipos</div></div>
+    <div class="stat"><div class="stat-val" id="aAvg">—</div><div class="stat-label">Promedio</div></div>
+    <div class="stat"><div class="stat-val" id="aMax">—</div><div class="stat-label">Máximo</div></div>
+    <div class="stat"><div class="stat-val" id="aMin">—</div><div class="stat-label">Mínimo</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Buscar por hostname o CPU…" oninput="scheduleSearch()">
+    <button class="btn btn-ghost" onclick="load(0)">Actualizar</button>
+    <button class="btn btn-ghost" onclick="exportCsv()">Exportar CSV</button>
+    <span style="margin-left:auto;font-size:0.78rem;color:var(--muted)" id="tableInfo">—</span>
+  </div>
+
+  <div class="table-wrap">
+    <div id="tableContent"><div class="loading">Cargando…</div></div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const token = sessionStorage.getItem('pgAdminToken')
+if (!token) window.location.href = '/admin'
+
+function authHeader() { return { Authorization: 'Basic ' + token } }
+
+function logout() {
+  sessionStorage.removeItem('pgAdminToken')
+  window.location.href = '/admin'
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 50
+let currentPage = 0
+let totalRows = 0
+let searchTimer = null
+
+function scheduleSearch() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => load(0), 350)
+}
+
+async function load(page = 0) {
+  currentPage = page
+  const q = document.getElementById('searchInput').value.trim()
+  const url = `/api/admin/scores?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}${q ? '&q=' + encodeURIComponent(q) : ''}`
+  try {
+    const res = await fetch(url, { headers: authHeader() })
+    if (res.status === 401 || res.status === 403) { logout(); return }
+    const { total, rows } = await res.json()
+    totalRows = total
+    loadStats()
+    renderTable(rows, page * PAGE_SIZE)
+    renderPagination(total, page)
+  } catch (err) {
+    document.getElementById('tableContent').innerHTML = `<div class="loading">Error: ${err.message}</div>`
+  }
+}
+
+async function loadStats() {
+  const res = await fetch('/api/stats')
+  const { stats } = await res.json()
+  document.getElementById('aTotal').textContent = totalRows.toLocaleString('es')
+  document.getElementById('aAvg').textContent = stats.avg ? stats.avg.toFixed(1) : '—'
+  document.getElementById('aMax').textContent = stats.max ? stats.max.toFixed(1) : '—'
+  document.getElementById('aMin').textContent = stats.min ? stats.min.toFixed(1) : '—'
+}
+
+function renderTable(rows, offset) {
+  document.getElementById('tableInfo').textContent = `${offset + 1}–${offset + rows.length} de ${totalRows}`
+  if (!rows.length) { document.getElementById('tableContent').innerHTML = '<div class="loading">Sin resultados.</div>'; return }
+
+  const html = `<table>
+    <thead><tr>
+      <th>ID</th><th>Rank</th><th>Hostname</th><th>Score</th><th>CPU</th><th>GPU</th>
+      <th>RAM</th><th>Disco L/E</th><th>CPU °C</th><th>GPU °C</th>
+      <th>OS</th><th>Cobertura</th><th>Machine ID</th><th>Fecha</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${rows.map(r => {
+        const date = r.tested_at ? new Date(r.tested_at).toLocaleString('es', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'
+        const disk = (r.disk_read || r.disk_write) ? `${r.disk_read ? Math.round(r.disk_read) : '?'} / ${r.disk_write ? Math.round(r.disk_write) : '?'}` : '—'
+        let notes = ''
+        try { notes = r.notes ? JSON.parse(r.notes).join(', ') : '' } catch {}
+        return `<tr>
+          <td style="color:var(--muted);font-size:0.72rem">#${r.id}</td>
+          <td style="font-weight:700">${r.rank || '—'}</td>
+          <td><span class="hostname-tag">${r.hostname || '—'}</span></td>
+          <td><span class="score-val">${r.score.toFixed(1)}</span></td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.cpu_model||''}">${r.cpu_model || '—'}</td>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.75rem;color:var(--muted)" title="${r.gpu_model||''}">${r.gpu_model || '—'}</td>
+          <td>${r.ram_gb ? r.ram_gb + ' GB' : '—'}</td>
+          <td style="font-size:0.75rem">${disk}</td>
+          <td>${r.cpu_temp ? r.cpu_temp + ' °C' : '—'}</td>
+          <td>${r.gpu_temp ? r.gpu_temp + ' °C' : '—'}</td>
+          <td style="font-size:0.75rem">${r.os_name || '—'}</td>
+          <td>${r.coverage ? r.coverage.toFixed(0) + '%' : '—'}</td>
+          <td><span class="machine-id">${r.machine_id ? r.machine_id.slice(0, 8) + '…' : '—'}</span></td>
+          <td style="font-size:0.75rem;color:var(--muted);white-space:nowrap">${date}</td>
+          <td><button class="del-btn" onclick="del(${r.id})">✕</button></td>
+        </tr>`
+      }).join('')}
+    </tbody>
+  </table>`
+  document.getElementById('tableContent').innerHTML = html
+}
+
+async function del(id) {
+  if (!confirm(`¿Eliminar registro #${id}?`)) return
+  await fetch(`/api/admin/scores/${id}`, { method: 'DELETE', headers: authHeader() })
+  load(currentPage)
+}
+
+function renderPagination(total, current) {
+  const pages = Math.ceil(total / PAGE_SIZE)
+  if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return }
+  const btns = []
+  for (let i = 0; i < Math.min(pages, 20); i++) {
+    btns.push(`<button class="page-btn ${i === current ? 'active' : ''}" onclick="load(${i})">${i + 1}</button>`)
+  }
+  document.getElementById('pagination').innerHTML = btns.join('')
+}
+
+async function exportCsv() {
+  const res = await fetch(`/api/admin/scores?limit=10000&offset=0`, { headers: authHeader() })
+  const { rows } = await res.json()
+  const header = 'id,hostname,score,coverage,cpu_model,gpu_model,ram_gb,disk_read,disk_write,cpu_temp,gpu_temp,os_name,tested_at'
+  const lines = rows.map(r => [r.id, r.hostname, r.score, r.coverage, r.cpu_model, r.gpu_model, r.ram_gb, r.disk_read, r.disk_write, r.cpu_temp, r.gpu_temp, r.os_name, new Date(r.tested_at).toISOString()].map(v => v === null || v === undefined ? '' : `"${String(v).replace(/"/g, '""')}"`).join(','))
+  const csv = [header, ...lines].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pulseguard-scores-${new Date().toISOString().slice(0,10)}.csv`; a.click()
+}
+
+load()
+</script>
+</body>
+</html>
