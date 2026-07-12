@@ -47,3 +47,15 @@ button { color:inherit; }
 .diagnostic-card>button.intensive-button { margin-top:-5px; color:#dce5e7; background:#152025; border:1px solid #2b3b41; }.intensive-note { display:block; color:#68767b; font-size:7px; line-height:1.5; margin:-5px 0 13px; }.report-export-card>p { color:#79868d; font-size:9px; line-height:1.6; }.export-report-button { width:100%; min-height:40px; display:flex; justify-content:center; align-items:center; gap:8px; margin:14px 0; border:1px solid #2b3b41; background:#132026; color:#dce5e7; font-size:10px; font-weight:700; cursor:pointer; }.export-report-button:disabled { opacity:.65; cursor:not-allowed; }.export-notice { margin-top:8px; background:#121610; border-color:#2d3724; color:#9fc284; }.export-notice span { color:#7e8e72; }.export-notice b { color:#d6e3c8; }
 @media(max-width:760px){.health-grid{grid-template-columns:1fr}.health-hero{padding:20px}.health-evaluation-head{display:grid}.health-live-grid{grid-template-columns:1fr 1fr}.health-score{width:82px;height:82px}.health-score span{font-size:27px}.profile-list{grid-template-columns:1fr}.health-card{min-height:0}.sidebar{width:min(280px,82vw)}.content-area{padding-bottom:85px}}
 @media(max-width:420px){.health-hero{align-items:flex-start}.health-hero>div:first-child{max-width:68%}.health-score{width:72px;height:72px}.health-score small{font-size:6px}.result-grid{grid-template-columns:1fr 1fr 1fr}.topbar h1{font-size:17px}}
+
+.about-page { display:grid; gap:16px; max-width:980px; }
+.about-hero { display:flex; gap:16px; align-items:flex-start; padding:24px; background:linear-gradient(145deg,#12181b,#0f1417); border:1px solid var(--line); }
+.about-hero>svg { color:var(--cyan); flex:0 0 auto; margin-top:4px; }
+.about-hero h2 { margin:0 0 10px; font-size:26px; letter-spacing:-.04em; }
+.about-hero p:last-child { margin:0; max-width:760px; color:#91a0a6; font-size:12px; line-height:1.7; }
+.about-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.about-card { min-height:150px; padding:20px; background:#101619; border:1px solid var(--line); }
+.about-card svg { color:var(--lime); margin-bottom:12px; }
+.about-card h3 { margin:0 0 8px; font-size:16px; letter-spacing:-.03em; }
+.about-card p { margin:0; color:#819097; font-size:11px; line-height:1.7; }
+@media(max-width:760px){.about-grid{grid-template-columns:1fr}.about-hero{padding:20px}.about-page{max-width:none}}

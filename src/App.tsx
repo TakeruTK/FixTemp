@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowDownToLine, Bell, ChevronDown, Menu, RefreshCw, Wifi, WifiOff, X } from 'lucide-react'
+import { ArrowDownToLine, Bell, Info, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
 import { GpuStressEngine } from './components/GpuStressEngine'
@@ -22,10 +22,7 @@ const titles = {
     overlay: { eyebrow: 'EN PANTALLA', title: 'Overlay' },
     settings: { eyebrow: 'PREFERENCIAS', title: 'Ajustes' },
     updates: { eyebrow: 'MANTENIMIENTO', title: 'Actualizaciones' },
-    live: 'En vivo',
-    offline: 'Sin conexion',
-    profile: 'PERFIL',
-    defaultProfile: 'Predeterminado',
+    about: { eyebrow: 'INFORMACION', title: 'Acerca de' },
     connecting: 'Conectando con el equipo...',
     reading: 'Leyendo sensores y procesos',
     updateAvailable: 'Nueva version disponible',
@@ -46,10 +43,7 @@ const titles = {
     overlay: { eyebrow: 'ON SCREEN', title: 'Overlay' },
     settings: { eyebrow: 'PREFERENCES', title: 'Settings' },
     updates: { eyebrow: 'MAINTENANCE', title: 'Updates' },
-    live: 'Live',
-    offline: 'Offline',
-    profile: 'PROFILE',
-    defaultProfile: 'Default',
+    about: { eyebrow: 'INFORMATION', title: 'About' },
     connecting: 'Connecting to the device...',
     reading: 'Reading sensors and processes',
     updateAvailable: 'Update available',
@@ -63,37 +57,59 @@ const titles = {
     updateError: 'Could not check for updates'
   },
   'zh-CN': {
-    dashboard: { eyebrow: '控制中心', title: '系统状态' },
-    stress: { eyebrow: '诊断', title: '测试工作台' },
-    hardware: { eyebrow: '信息', title: '我的设备' },
-    health: { eyebrow: '本地诊断', title: '设备健康' },
-    overlay: { eyebrow: '屏幕显示', title: '悬浮层' },
-    settings: { eyebrow: '偏好设置', title: '设置' },
-    updates: { eyebrow: '维护', title: '更新' },
-    live: '实时',
-    offline: '离线',
-    profile: '配置',
-    defaultProfile: '默认',
-    connecting: '正在连接设备...',
-    reading: '正在读取传感器和进程',
-    updateAvailable: '发现新版本',
-    updateReady: '可以安装',
-    updateChecking: '正在检查更新...',
-    updateDownload: '下载',
-    updateDownloading: '下载中',
-    updateInstall: '安装并重启',
-    updateLater: '稍后',
-    updateOpen: '打开更新',
-    updateError: '无法检查更新'
+    dashboard: { eyebrow: 'CONTROL CENTER', title: 'System status' },
+    stress: { eyebrow: 'DIAGNOSTICS', title: 'Test bench' },
+    hardware: { eyebrow: 'INFORMATION', title: 'My device' },
+    health: { eyebrow: 'LOCAL DIAGNOSTICS', title: 'Device health' },
+    overlay: { eyebrow: 'ON SCREEN', title: 'Overlay' },
+    settings: { eyebrow: 'PREFERENCES', title: 'Settings' },
+    updates: { eyebrow: 'MAINTENANCE', title: 'Updates' },
+    about: { eyebrow: 'INFORMATION', title: 'About' },
+    connecting: 'Connecting to the device...',
+    reading: 'Reading sensors and processes',
+    updateAvailable: 'Update available',
+    updateReady: 'Ready to install',
+    updateChecking: 'Checking for updates...',
+    updateDownload: 'Download',
+    updateDownloading: 'Downloading',
+    updateInstall: 'Install and restart',
+    updateLater: 'Later',
+    updateOpen: 'Open updates',
+    updateError: 'Could not check for updates'
   }
 } as const
+
+function AboutPanel() {
+  return <section className="about-page">
+    <div className="about-hero">
+      <Info size={24}/>
+      <div>
+        <p className="section-label">FIXPC</p>
+        <h2>FixTemp</h2>
+        <p>FixPC es el proyecto de herramientas para revisar, mantener y entender mejor el estado real de un equipo. FixTemp forma parte de ese proyecto y se enfoca en monitorear sensores, temperatura, carga, hardware y estabilidad desde una interfaz local.</p>
+      </div>
+    </div>
+    <div className="about-grid">
+      <article className="about-card">
+        <ShieldCheck size={20}/>
+        <h3>Para que sirve</h3>
+        <p>Sirve para ver el comportamiento del PC en vivo, comprobar temperatura de CPU y GPU cuando el equipo entrega sensores reales, revisar memoria, discos, red y procesos principales.</p>
+      </article>
+      <article className="about-card">
+        <RefreshCw size={20}/>
+        <h3>Uso principal</h3>
+        <p>Ayuda a detectar si el equipo esta trabajando normal, si faltan sensores, si hay carga alta o si conviene hacer pruebas antes de mantenimiento, reparacion o comparacion entre equipos.</p>
+      </article>
+    </div>
+  </section>
+}
 
 function MainApp() {
   const { language } = useI18n()
   const text = titles[language]
   const [view, setView] = useState<View>(() => /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 'health' : 'dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
-  const { data, connected, error } = useMetrics()
+  const { data, error } = useMetrics()
   const { state: updateState, visibleUpdate, installing, startDownload, install, dismiss } = useUpdates()
   const updateBadge = visibleUpdate || updateState.download.active || Boolean(updateState.download.filePath)
 
@@ -105,9 +121,7 @@ function MainApp() {
         <button className="menu-button" onClick={() => setMenuOpen(value => !value)}><Menu size={20}/></button>
         <div><p>{text[view].eyebrow}</p><h1>{text[view].title}</h1></div>
         <div className="topbar__actions">
-          <span className={`connection ${connected ? '' : 'offline'}`}>{connected ? <Wifi size={14}/> : <WifiOff size={14}/>} {connected ? text.live : text.offline}</span>
           <button className={`icon-button ${updateBadge ? 'has-alert' : ''}`} onClick={() => setView('updates')} title={text.updateOpen}><Bell size={17}/><i/></button>
-          <button className="profile"><span>PG</span><div><small>{text.profile}</small><strong>{text.defaultProfile}</strong></div><ChevronDown size={14}/></button>
         </div>
       </header>
       <div className="content-area">
@@ -148,7 +162,7 @@ function MainApp() {
           </section>
         ) : null}
 
-        {view === 'health' ? <DeviceHealth data={data}/> : view === 'settings' ? <SettingsPanel/> : view === 'updates' ? <UpdatePanel/> : !data
+        {view === 'health' ? <DeviceHealth data={data}/> : view === 'settings' ? <SettingsPanel/> : view === 'updates' ? <UpdatePanel/> : view === 'about' ? <AboutPanel/> : !data
           ? <div className="loading"><RefreshCw className="spin" size={25}/><strong>{text.connecting}</strong><span>{error || text.reading}</span></div>
           : view === 'dashboard' ? <Dashboard data={data}/>
             : view === 'stress' ? <StressLab data={data}/>
