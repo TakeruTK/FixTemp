@@ -1,29 +1,38 @@
-import { Activity, Cpu, Download, Gamepad2, HeartPulse, Info, Settings, ShieldCheck, TestTubeDiagonal } from 'lucide-react'
+import { Activity, Cpu, Download, Gauge, Gamepad2, HardDrive, HeartPulse, Info, LayoutDashboard, Settings, ShieldCheck, TestTubeDiagonal } from 'lucide-react'
 import { useI18n } from '../i18n'
 
-export type View = 'stress' | 'hardware' | 'health' | 'overlay' | 'settings' | 'updates'
+export type View = 'dashboard' | 'stress' | 'hardware' | 'health' | 'overlay' | 'settings' | 'updates'
 
 const copy = {
   es: {
-    items: { stress: 'Pruebas de estres', overlay: 'Overlay', hardware: 'Mi equipo', health: 'Salud del dispositivo' },
-    protection: 'Proteccion activa',
+    items: { dashboard: 'Resumen', stress: 'Pruebas de estrés', overlay: 'Overlay', hardware: 'Mi equipo', health: 'Salud del dispositivo' },
+    tools: 'HERRAMIENTAS',
+    performance: 'Rendimiento',
+    storage: 'Almacenamiento',
+    protection: 'Protección activa',
     settings: 'Ajustes',
     updates: 'Actualizaciones',
     about: 'Acerca de'
   },
   en: {
-    items: { stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
+    items: { dashboard: 'Overview', stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
+    tools: 'TOOLS',
+    performance: 'Performance',
+    storage: 'Storage',
     protection: 'Protection active',
     settings: 'Settings',
     updates: 'Updates',
     about: 'About'
   },
   'zh-CN': {
-    items: { stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
-    protection: 'Protection active',
-    settings: 'Settings',
-    updates: 'Updates',
-    about: 'About'
+    items: { dashboard: '概览', stress: '压力测试', overlay: '悬浮层', hardware: '我的设备', health: '设备健康' },
+    tools: '工具',
+    performance: '性能',
+    storage: '存储',
+    protection: '保护已启用',
+    settings: '设置',
+    updates: '更新',
+    about: '关于'
   }
 } as const
 
@@ -31,16 +40,18 @@ export function Sidebar({ view, onChange }: { view: View; onChange: (view: View)
   const { language } = useI18n()
   const text = copy[language]
   const items = [
-    { id: 'health' as const, label: text.items.health, icon: HeartPulse },
+    { id: 'dashboard' as const, label: text.items.dashboard, icon: LayoutDashboard },
     { id: 'stress' as const, label: text.items.stress, icon: TestTubeDiagonal },
     { id: 'overlay' as const, label: text.items.overlay, icon: Gamepad2 },
-    { id: 'hardware' as const, label: text.items.hardware, icon: Cpu }
+    { id: 'hardware' as const, label: text.items.hardware, icon: Cpu },
+    { id: 'health' as const, label: text.items.health, icon: HeartPulse }
   ]
 
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="brand__mark"><Activity size={19}/></div><div><strong>FIX</strong><span>TEMP</span></div></div>
+      <div className="brand"><div className="brand__mark"><Activity size={19}/></div><div><strong>PULSE</strong><span>GUARD</span></div></div>
       <nav>{items.map(({ id, label, icon: Icon }) => <button key={id} className={view === id ? 'active' : ''} onClick={() => onChange(id)}><Icon size={18}/><span>{label}</span></button>)}</nav>
+      <div className="sidebar__section"><span>{text.tools}</span><button disabled><Gauge size={18}/><span>{text.performance}</span></button><button disabled><HardDrive size={18}/><span>{text.storage}</span></button></div>
       <div className="sidebar__footer">
         <div className="safe"><ShieldCheck size={16}/><span>{text.protection}</span></div>
         <button className={view === 'settings' ? 'active' : ''} onClick={() => onChange('settings')}><Settings size={17}/><span>{text.settings}</span></button>

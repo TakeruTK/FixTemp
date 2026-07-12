@@ -1,14 +1,14 @@
-﻿{
- "name": "FixTemp - Salud del dispositivo",
- "short_name": "FixTemp",
- "description": "Diagnostico, monitoreo y pruebas locales para PC, movil y tablet.",
- "start_url": "/",
- "display": "standalone",
- "background_color": "#080b0d",
- "theme_color": "#080b0d",
- "orientation": "any",
- "categories": ["utilities", "productivity"],
- "icons": [
- { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
- ]
+{
+  "name": "PulseGuard — Salud del dispositivo",
+  "short_name": "PulseGuard",
+  "description": "Diagnóstico, monitoreo y pruebas locales para PC, móvil y tablet.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080b0d",
+  "theme_color": "#080b0d",
+  "orientation": "any",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
 }

@@ -1,4 +1,4 @@
-﻿import os from 'node:os'
+import os from 'node:os'
 import path from 'node:path'
 import si from 'systeminformation'
 
@@ -12,14 +12,14 @@ const safe = async (task, fallback) => {
 function pulseGuardDataRoot() {
   if (process.platform === 'win32') {
     return process.env.LOCALAPPDATA
-      ? path.join(process.env.LOCALAPPDATA, 'FixTemp')
-      : path.join(os.homedir(), 'AppData', 'Local', 'FixTemp')
+      ? path.join(process.env.LOCALAPPDATA, 'PulseGuard')
+      : path.join(os.homedir(), 'AppData', 'Local', 'PulseGuard')
   }
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Application Support', 'FixTemp')
+    return path.join(os.homedir(), 'Library', 'Application Support', 'PulseGuard')
   }
   const base = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
-  return path.join(base, 'FixTemp')
+  return path.join(base, 'PulseGuard')
 }
 
 export function getOverlayConfigPath() {
