@@ -1357,7 +1357,8 @@ app.post('/api/speedtest/stop', (_req, res) => {
 })
 
 // ── Auto-update ─────────────────────────────────────────────────────────────
-const UPDATE_MANIFEST_URL = process.env.FIXTEMP_UPDATE_URL || 'http://localhost:3500/updates/latest'
+const DEFAULT_UPDATE_RELEASE_URL = 'https://api.github.com/repos/TakeruTK/FixTemp/releases/latest'
+const UPDATE_MANIFEST_URL = process.env.FIXTEMP_UPDATE_URL || DEFAULT_UPDATE_RELEASE_URL
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000
 
 let updateDownload = { active: false, percent: 0, filePath: null, error: null }
@@ -1386,7 +1387,33 @@ const syncUpdateCurrentVersion = async () => {
   }
 }
 
-const compareVersions = (left, right) => left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' })
+const normalizeVersion = (value) => String(value || '').trim().replace(/^v/i, '')
+const compareVersions = (left, right) => normalizeVersion(left).localeCompare(normalizeVersion(right), undefined, { numeric: true, sensitivity: 'base' })
+const updateFetchHeaders = () => UPDATE_MANIFEST_URL.includes('api.github.com')
+  ? { 'User-Agent': 'FixTemp-Updater', Accept: 'application/vnd.github+json' }
+  : undefined
+const releaseAssetDownloadUrl = (assets) => {
+  if (!Array.isArray(assets)) return null
+  const installer = assets.find(asset => /^FixTemp-Setup-.*\.exe$/i.test(asset?.name || ''))
+    || assets.find(asset => /\.exe$/i.test(asset?.name || ''))
+  return typeof installer?.browser_download_url === 'string' ? installer.browser_download_url : null
+}
+const normalizeUpdateManifest = (payload, current) => {
+  const version = normalizeVersion(payload?.version || payload?.tag_name || payload?.name || current) || current
+  return {
+    version,
+    downloadUrl: typeof payload?.downloadUrl === 'string'
+      ? payload.downloadUrl
+      : typeof payload?.download_url === 'string'
+        ? payload.download_url
+        : releaseAssetDownloadUrl(payload?.assets),
+    changelog: typeof payload?.changelog === 'string'
+      ? payload.changelog
+      : typeof payload?.body === 'string'
+        ? payload.body
+        : ''
+  }
+}
 
 async function performUpdateCheck(force = false) {
   const current = await syncUpdateCurrentVersion()
@@ -1400,10 +1427,10 @@ async function performUpdateCheck(force = false) {
 
   updateState = { ...updateState, currentVersion: current, checking: true, error: null }
   try {
-    const response = await fetch(UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(8000) })
+    const response = await fetch(UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(8000), headers: updateFetchHeaders() })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const manifest = await response.json()
-    const latest = typeof manifest.version === 'string' && manifest.version.trim() ? manifest.version.trim() : current
+    const manifest = normalizeUpdateManifest(await response.json(), current)
+    const latest = manifest.version || current
     const hasUpdate = latest !== current && compareVersions(latest, current) > 0
     updateState = {
       ...updateState,
@@ -1412,8 +1439,8 @@ async function performUpdateCheck(force = false) {
       currentVersion: current,
       latestVersion: latest,
       hasUpdate,
-      downloadUrl: typeof manifest.downloadUrl === 'string' ? manifest.downloadUrl : null,
-      changelog: typeof manifest.changelog === 'string' ? manifest.changelog : '',
+      downloadUrl: manifest.downloadUrl,
+      changelog: manifest.changelog,
       error: null
     }
   } catch (err) {
