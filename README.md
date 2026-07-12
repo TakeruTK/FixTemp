@@ -1,6 +1,6 @@
 ﻿# FixTemp
 
-## Novedades 0.6.2
+## Novedades 0.6.3
 
 - Pruebas reales de CPU, GPU, RAM y disco con verificaciÃ³n del trabajo realizado.
 - GrÃ¡ficas sincronizadas de actividad, temperatura y potencia durante cada sesiÃ³n.
@@ -37,8 +37,8 @@ El instalador se crea en la carpeta `release`. Incluye una opciÃ³n para inicia
 El actualizador integrado consulta la ultima release publicada en GitHub. Para publicar una nueva version:
 
 ```powershell
-git tag v0.6.2
-git push origin v0.6.2
+git tag v0.6.3
+git push origin v0.6.3
 ```
 
 GitHub Actions generara el instalador de Windows y lo adjuntara a la release. Las instalaciones con una version anterior detectaran esa release desde la pantalla Actualizaciones.

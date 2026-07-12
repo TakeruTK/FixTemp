@@ -1,6 +1,5 @@
 ﻿import { useState } from 'react'
 import { ArrowDownToLine, Bell, ChevronDown, Menu, RefreshCw, Wifi, WifiOff, X } from 'lucide-react'
-import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
 import { GpuStressEngine } from './components/GpuStressEngine'
 import { Hardware } from './components/Hardware'
@@ -15,7 +14,6 @@ import { I18nProvider, useI18n } from './i18n'
 
 const titles = {
   es: {
-    dashboard: { eyebrow: 'CENTRO DE CONTROL', title: 'Estado del sistema' },
     stress: { eyebrow: 'DIAGNOSTICO', title: 'Banco de pruebas' },
     hardware: { eyebrow: 'INFORMACION', title: 'Mi equipo' },
     health: { eyebrow: 'DIAGNOSTICO LOCAL', title: 'Salud del dispositivo' },
@@ -39,7 +37,6 @@ const titles = {
     updateError: 'No se pudo comprobar la actualizacion'
   },
   en: {
-    dashboard: { eyebrow: 'CONTROL CENTER', title: 'System status' },
     stress: { eyebrow: 'DIAGNOSTICS', title: 'Test bench' },
     hardware: { eyebrow: 'INFORMATION', title: 'My device' },
     health: { eyebrow: 'LOCAL DIAGNOSTICS', title: 'Device health' },
@@ -63,7 +60,6 @@ const titles = {
     updateError: 'Could not check for updates'
   },
   'zh-CN': {
-    dashboard: { eyebrow: 'æŽ§åˆ¶ä¸­å¿ƒ', title: 'ç³»ç»ŸçŠ¶æ€' },
     stress: { eyebrow: 'è¯Šæ–­', title: 'æµ‹è¯•å·¥ä½œå°' },
     hardware: { eyebrow: 'ä¿¡æ¯', title: 'æˆ‘çš„è®¾å¤‡' },
     health: { eyebrow: 'æœ¬åœ°è¯Šæ–­', title: 'è®¾å¤‡å¥åº·' },
@@ -91,7 +87,7 @@ const titles = {
 function MainApp() {
   const { language } = useI18n()
   const text = titles[language]
-  const [view, setView] = useState<View>(() => /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 'health' : 'dashboard')
+  const [view, setView] = useState<View>('health')
   const [menuOpen, setMenuOpen] = useState(false)
   const { data, connected, error } = useMetrics()
   const { state: updateState, visibleUpdate, installing, startDownload, install, dismiss } = useUpdates()
@@ -150,8 +146,7 @@ function MainApp() {
 
         {view === 'health' ? <DeviceHealth data={data}/> : view === 'settings' ? <SettingsPanel/> : view === 'updates' ? <UpdatePanel/> : !data
           ? <div className="loading"><RefreshCw className="spin" size={25}/><strong>{text.connecting}</strong><span>{error || text.reading}</span></div>
-          : view === 'dashboard' ? <Dashboard data={data}/>
-            : view === 'stress' ? <StressLab data={data}/>
+          : view === 'stress' ? <StressLab data={data}/>
               : view === 'overlay' ? <OverlaySettings data={data}/>
                 : <Hardware data={data}/>}
       </div>

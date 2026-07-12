@@ -1,38 +1,29 @@
-﻿import { Activity, Cpu, Download, Gamepad2, HeartPulse, Info, LayoutDashboard, Settings, ShieldCheck, TestTubeDiagonal } from 'lucide-react'
+import { Activity, Cpu, Download, Gamepad2, HeartPulse, Info, Settings, ShieldCheck, TestTubeDiagonal } from 'lucide-react'
 import { useI18n } from '../i18n'
 
-export type View = 'dashboard' | 'stress' | 'hardware' | 'health' | 'overlay' | 'settings' | 'updates'
+export type View = 'stress' | 'hardware' | 'health' | 'overlay' | 'settings' | 'updates'
 
 const copy = {
   es: {
-    items: { dashboard: 'Resumen', stress: 'Pruebas de estrÃ©s', overlay: 'Overlay', hardware: 'Mi equipo', health: 'Salud del dispositivo' },
-    tools: 'HERRAMIENTAS',
-    performance: 'Rendimiento',
-    storage: 'Almacenamiento',
-    protection: 'ProtecciÃ³n activa',
+    items: { stress: 'Pruebas de estres', overlay: 'Overlay', hardware: 'Mi equipo', health: 'Salud del dispositivo' },
+    protection: 'Proteccion activa',
     settings: 'Ajustes',
     updates: 'Actualizaciones',
     about: 'Acerca de'
   },
   en: {
-    items: { dashboard: 'Overview', stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
-    tools: 'TOOLS',
-    performance: 'Performance',
-    storage: 'Storage',
+    items: { stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
     protection: 'Protection active',
     settings: 'Settings',
     updates: 'Updates',
     about: 'About'
   },
   'zh-CN': {
-    items: { dashboard: 'æ¦‚è§ˆ', stress: 'åŽ‹åŠ›æµ‹è¯•', overlay: 'æ‚¬æµ®å±‚', hardware: 'æˆ‘çš„è®¾å¤‡', health: 'è®¾å¤‡å¥åº·' },
-    tools: 'å·¥å…·',
-    performance: 'æ€§èƒ½',
-    storage: 'å­˜å‚¨',
-    protection: 'ä¿æŠ¤å·²å¯ç”¨',
-    settings: 'è®¾ç½®',
-    updates: 'æ›´æ–°',
-    about: 'å…³äºŽ'
+    items: { stress: 'Stress tests', overlay: 'Overlay', hardware: 'My device', health: 'Device health' },
+    protection: 'Protection active',
+    settings: 'Settings',
+    updates: 'Updates',
+    about: 'About'
   }
 } as const
 
@@ -40,16 +31,15 @@ export function Sidebar({ view, onChange }: { view: View; onChange: (view: View)
   const { language } = useI18n()
   const text = copy[language]
   const items = [
-    { id: 'dashboard' as const, label: text.items.dashboard, icon: LayoutDashboard },
+    { id: 'health' as const, label: text.items.health, icon: HeartPulse },
     { id: 'stress' as const, label: text.items.stress, icon: TestTubeDiagonal },
     { id: 'overlay' as const, label: text.items.overlay, icon: Gamepad2 },
-    { id: 'hardware' as const, label: text.items.hardware, icon: Cpu },
-    { id: 'health' as const, label: text.items.health, icon: HeartPulse }
+    { id: 'hardware' as const, label: text.items.hardware, icon: Cpu }
   ]
 
   return (
     <aside className="sidebar">
-      <div className="brand"><div className="brand__mark"><Activity size={19}/></div><div><strong>PULSE</strong><span>GUARD</span></div></div>
+      <div className="brand"><div className="brand__mark"><Activity size={19}/></div><div><strong>FIX</strong><span>TEMP</span></div></div>
       <nav>{items.map(({ id, label, icon: Icon }) => <button key={id} className={view === id ? 'active' : ''} onClick={() => onChange(id)}><Icon size={18}/><span>{label}</span></button>)}</nav>
       <div className="sidebar__footer">
         <div className="safe"><ShieldCheck size={16}/><span>{text.protection}</span></div>
