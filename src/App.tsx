@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowDownToLine, Bell, Info, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
+import { ArrowDownToLine, Bell, Info, ListChecks, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
 import { GpuStressEngine } from './components/GpuStressEngine'
@@ -99,6 +99,17 @@ function AboutPanel() {
         <RefreshCw size={20}/>
         <h3>Uso principal</h3>
         <p>Ayuda a detectar si el equipo esta trabajando normal, si faltan sensores, si hay carga alta o si conviene hacer pruebas antes de mantenimiento, reparacion o comparacion entre equipos.</p>
+      </article>
+      <article className="about-card about-guide">
+        <ListChecks size={20}/>
+        <h3>Guia rapida de uso</h3>
+        <ol>
+          <li>Abre Resumen para revisar CPU, GPU, RAM, red, discos y procesos en vivo.</li>
+          <li>Si faltan temperatura o ventilador, usa Ajustes para activar los sensores avanzados.</li>
+          <li>En Mi equipo revisa el inventario del PC antes de comparar o reparar.</li>
+          <li>Usa Salud del dispositivo para una evaluacion general y Pruebas de estres solo cuando quieras exigir el equipo.</li>
+          <li>En Actualizaciones busca nuevas versiones y deja que FixTemp descargue el instalador cuando haya una mejora disponible.</li>
+        </ol>
       </article>
     </div>
   </section>

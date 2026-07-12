@@ -58,4 +58,7 @@ button { color:inherit; }
 .about-card svg { color:var(--lime); margin-bottom:12px; }
 .about-card h3 { margin:0 0 8px; font-size:16px; letter-spacing:-.03em; }
 .about-card p { margin:0; color:#819097; font-size:11px; line-height:1.7; }
+.about-guide { grid-column:1/-1; min-height:0; }
+.about-guide ol { margin:0; padding-left:18px; color:#819097; font-size:11px; line-height:1.8; }
+.about-guide li { padding-left:4px; margin:4px 0; }
 @media(max-width:760px){.about-grid{grid-template-columns:1fr}.about-hero{padding:20px}.about-page{max-width:none}}
