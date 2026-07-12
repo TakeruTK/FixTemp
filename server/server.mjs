@@ -1589,16 +1589,52 @@ app.post('/api/update/install', (req, res) => {
   const filePath = updateDownload.filePath || req.body?.filePath
   if (!filePath || !existsSync(filePath)) return res.status(400).json({ error: 'Instalador no encontrado en: ' + filePath })
   res.json({ installing: true })
-  setTimeout(() => {
+  setTimeout(async () => {
     const relaunchTarget = appExecutablePath && existsSync(appExecutablePath) ? appExecutablePath : path.join(process.env.ProgramFiles || appInstallDir, 'FixTemp', 'FixTemp.exe')
+    const updateScriptPath = path.join(os.tmpdir(), 'FixTemp-Apply-Update.ps1')
+    const logPath = path.join(windowsProgramDataPath, 'FixTemp', 'update-install.log')
     const script = [
       `$installer = ${psQuote(filePath)}`,
       `$app = ${psQuote(relaunchTarget)}`,
-      `Start-Process -FilePath $installer -ArgumentList '/S' -Wait`,
+      `$installDir = ${psQuote(appInstallDir)}`,
+      `$parentPid = ${process.pid}`,
+      `$log = ${psQuote(logPath)}`,
+      `New-Item -ItemType Directory -Force -Path (Split-Path -Parent $log) | Out-Null`,
+      `function Write-FixTempLog([string]$message) { Add-Content -LiteralPath $log -Value "$(Get-Date -Format o) $message" }`,
+      `Write-FixTempLog "Iniciando actualizacion con $installer"`,
+      `try { Wait-Process -Id $parentPid -Timeout 35 -ErrorAction SilentlyContinue } catch {}`,
       `Start-Sleep -Seconds 2`,
-      `if (Test-Path -LiteralPath $app) { Start-Process -FilePath $app }`
-    ].join('; ')
-    spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-Command', script], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
+      `Get-Process FixTemp,PulseGuard -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $PID } | ForEach-Object { try { Write-FixTempLog "Cerrando proceso $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force -ErrorAction Stop } catch { Write-FixTempLog "No se pudo cerrar $($_.Id): $($_.Exception.Message)" } }`,
+      `$installed = $false`,
+      `try {`,
+      `  $proc = Start-Process -FilePath $installer -ArgumentList '/S' -Verb RunAs -Wait -PassThru -ErrorAction Stop`,
+      `  Write-FixTempLog "Instalador elevado termino con codigo $($proc.ExitCode)"`,
+      `  $installed = $true`,
+      `} catch {`,
+      `  Write-FixTempLog "Instalador elevado fallo: $($_.Exception.Message)"`,
+      `  try {`,
+      `    $proc = Start-Process -FilePath $installer -ArgumentList '/S' -Wait -PassThru -ErrorAction Stop`,
+      `    Write-FixTempLog "Instalador normal termino con codigo $($proc.ExitCode)"`,
+      `    $installed = $true`,
+      `  } catch { Write-FixTempLog "Instalador normal fallo: $($_.Exception.Message)" }`,
+      `}`,
+      `Start-Sleep -Seconds 8`,
+      `$programFiles = [Environment]::GetFolderPath('ProgramFiles')`,
+      `$programFilesX86 = [Environment]::GetFolderPath('ProgramFilesX86')`,
+      `$candidates = @($app, (Join-Path $installDir 'FixTemp.exe'), (Join-Path $programFiles 'FixTemp\\FixTemp.exe'), (Join-Path $programFilesX86 'FixTemp\\FixTemp.exe')) | Where-Object { $_ } | Select-Object -Unique`,
+      `foreach ($candidate in $candidates) {`,
+      `  if (Test-Path -LiteralPath $candidate) {`,
+      `    for ($i = 1; $i -le 8; $i++) {`,
+      `      try { Write-FixTempLog "Abriendo $candidate intento $i"; Start-Process -FilePath $candidate -ErrorAction Stop; break } catch { Write-FixTempLog "No se pudo abrir intento $i: $($_.Exception.Message)"; Start-Sleep -Seconds 5 }`,
+      `    }`,
+      `    break`,
+      `  }`,
+      `}`,
+      `Write-FixTempLog "Actualizacion finalizada. installed=$installed"`,
+      `Remove-Item -LiteralPath $PSCommandPath -Force -ErrorAction SilentlyContinue`
+    ].join('\r\n')
+    await writeFile(updateScriptPath, script, 'utf8')
+    spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', updateScriptPath], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
     process.exit(0)
   }, 600)
 })
