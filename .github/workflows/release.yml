@@ -61,7 +61,14 @@ jobs:
         run: pnpm bundle:server
 
       - name: Build Windows installer
-        run: pnpm exec electron-builder --win nsis
+        shell: pwsh
+        run: |
+          pnpm exec electron-builder --win nsis *>&1 | Tee-Object electron-builder.log
+          if ($LASTEXITCODE -ne 0) {
+            $tail = (Get-Content electron-builder.log -Tail 80) -join "%0A"
+            Write-Host "::error title=Electron Builder failed::$tail"
+            exit $LASTEXITCODE
+          }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
