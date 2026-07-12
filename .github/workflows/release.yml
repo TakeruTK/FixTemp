@@ -63,7 +63,7 @@ jobs:
       - name: Build Windows installer
         shell: pwsh
         run: |
-          pnpm exec electron-builder --win nsis *>&1 | Tee-Object electron-builder.log
+          pnpm exec electron-builder --win nsis --publish never *>&1 | Tee-Object electron-builder.log
           if ($LASTEXITCODE -ne 0) {
             $tail = (Get-Content electron-builder.log -Tail 80) -join "%0A"
             Write-Host "::error title=Electron Builder failed::$tail"
