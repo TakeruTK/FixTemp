@@ -42,6 +42,9 @@ const sensorInstallScriptPath = process.platform === 'win32'
 const appInstallDir = process.resourcesPath
   ? path.dirname(process.resourcesPath)
   : path.resolve(runtimeDir, '..')
+const appExecutablePath = process.platform === 'win32'
+  ? path.join(appInstallDir, 'FixTemp.exe')
+  : null
 const packageJsonPath = process.resourcesPath && runtimeDir.includes('app.asar')
   ? path.join(process.resourcesPath, 'app.asar', 'package.json')
   : path.resolve(runtimeDir, '../package.json')
@@ -1001,7 +1004,11 @@ app.get('/api/processes', (_req, res) => {
 async function readSystemDetails() {
   if (process.platform !== 'win32') return readPortableSystemDetails(metrics)
   try {
-    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', systemInfoScript], { windowsHide: true, timeout: 40000, maxBuffer: 4 * 1024 * 1024 })
+    const nativePowerShell = process.env.SystemRoot
+      ? path.join(process.env.SystemRoot, 'Sysnative', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+      : 'powershell.exe'
+    const shell = existsSync(nativePowerShell) ? nativePowerShell : 'powershell.exe'
+    const { stdout } = await execFileAsync(shell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', systemInfoScript], { windowsHide: true, timeout: 60000, maxBuffer: 8 * 1024 * 1024 })
     // Extraer el JSON desde la última línea que empiece con '{' — robusto contra
     // cualquier texto/warning que PowerShell pueda escribir antes del ConvertTo-Json
     const lines = stdout.trim().split(/\r?\n/)
@@ -1010,11 +1017,32 @@ async function readSystemDetails() {
     const details = parseJsonText(jsonLine)
     const hasInventory = details.cpu?.brand || details.system?.model || details.memory?.length || details.disks?.length || details.graphics?.controllers?.length
     if (!hasInventory) throw new Error('Windows restringió el inventario WMI.')
+    const fallback = await readPortableSystemDetails(metrics)
+    mergeSystemDetails(details, fallback)
     details.cpu ||= {}
     details.cpu.estimatedTdp = metrics.cpu.tdp
     details.limited = false
     return details
   } catch (error) {
+    try {
+      const fallback = await readPortableSystemDetails(metrics)
+      fallback.limited = true
+      fallback.warning = `Inventario parcial: ${error.message}`
+      fallback.system ||= {}
+      fallback.system.totalMemoryGb ||= metrics.memory.total
+      fallback.cpu ||= {}
+      fallback.cpu.brand ||= metrics.cpu.model
+      fallback.cpu.cores ||= metrics.cpu.cores
+      fallback.cpu.physicalCores ||= metrics.cpu.physicalCores
+      fallback.cpu.estimatedTdp = metrics.cpu.tdp
+      fallback.graphics ||= { controllers: [] }
+      if (!fallback.graphics.controllers?.length && metrics.gpu.model !== 'Detectando GPU…') {
+        fallback.graphics.controllers = [{ model: metrics.gpu.model, vendor: metrics.gpu.vendor, vram: metrics.gpu.memoryTotal }]
+      }
+      fallback.disks ||= metrics.hardware.disks.map(disk => ({ ...disk, size: disk.size * 1024 ** 3, volumes: [] }))
+      fallback.network ||= metrics.network.interface === 'Detectando red…' ? [] : [{ iface: metrics.network.interface }]
+      return fallback
+    } catch {}
     return {
       limited: true,
       warning: `Inventario parcial: ${error.message}`,
@@ -1028,6 +1056,34 @@ async function readSystemDetails() {
       monitors: []
     }
   }
+}
+
+function mergeObjectMissing(target = {}, fallback = {}) {
+  for (const [key, value] of Object.entries(fallback || {})) {
+    if ((target[key] === null || target[key] === undefined || target[key] === '') && value !== null && value !== undefined && value !== '') {
+      target[key] = value
+    }
+  }
+  return target
+}
+
+function mergeSystemDetails(details, fallback) {
+  details.system = mergeObjectMissing(details.system || {}, fallback.system || {})
+  details.os = mergeObjectMissing(details.os || {}, fallback.os || {})
+  details.directx = mergeObjectMissing(details.directx || {}, fallback.directx || {})
+  details.bios = mergeObjectMissing(details.bios || {}, fallback.bios || {})
+  details.baseboard = mergeObjectMissing(details.baseboard || {}, fallback.baseboard || {})
+  details.cpu = mergeObjectMissing(details.cpu || {}, fallback.cpu || {})
+  details.memorySummary = mergeObjectMissing(details.memorySummary || {}, fallback.memorySummary || {})
+  if (!Array.isArray(details.memory) || !details.memory.length) details.memory = fallback.memory || []
+  if (!Array.isArray(details.disks) || !details.disks.length) details.disks = fallback.disks || []
+  details.graphics ||= {}
+  fallback.graphics ||= {}
+  if (!Array.isArray(details.graphics.controllers) || !details.graphics.controllers.length) details.graphics.controllers = fallback.graphics.controllers || []
+  if (!Array.isArray(details.audio) || !details.audio.length) details.audio = fallback.audio || []
+  if (!Array.isArray(details.network) || !details.network.length) details.network = fallback.network || []
+  if (!Array.isArray(details.monitors) || !details.monitors.length) details.monitors = fallback.monitors || []
+  return details
 }
 
 async function ensureSystemDetails() {
@@ -1526,13 +1582,23 @@ app.post('/api/update/download', (req, res) => {
   doGet(downloadUrl)
 })
 
+const psQuote = value => `'${String(value).replace(/'/g, "''")}'`
+
 app.post('/api/update/install', (req, res) => {
   if (process.platform !== 'win32') return res.status(400).json({ error: 'La instalación automática de actualizaciones está disponible actualmente sólo en Windows.' })
   const filePath = updateDownload.filePath || req.body?.filePath
   if (!filePath || !existsSync(filePath)) return res.status(400).json({ error: 'Instalador no encontrado en: ' + filePath })
   res.json({ installing: true })
   setTimeout(() => {
-    spawn(filePath, ['/S'], { detached: true, stdio: 'ignore', windowsHide: false }).unref()
+    const relaunchTarget = appExecutablePath && existsSync(appExecutablePath) ? appExecutablePath : path.join(process.env.ProgramFiles || appInstallDir, 'FixTemp', 'FixTemp.exe')
+    const script = [
+      `$installer = ${psQuote(filePath)}`,
+      `$app = ${psQuote(relaunchTarget)}`,
+      `Start-Process -FilePath $installer -ArgumentList '/S' -Wait`,
+      `Start-Sleep -Seconds 2`,
+      `if (Test-Path -LiteralPath $app) { Start-Process -FilePath $app }`
+    ].join('; ')
+    spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-Command', script], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
     process.exit(0)
   }, 600)
 })
