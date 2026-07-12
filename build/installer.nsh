@@ -40,9 +40,9 @@ FunctionEnd
 
 !macro customInstall
   ${If} $StartWithWindows == "1"
-    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup'
+    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup -RelaunchApp'
   ${Else}
-    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR"'
+    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -RelaunchApp'
   ${EndIf}
   Pop $0
   Pop $1
@@ -50,8 +50,6 @@ FunctionEnd
     MessageBox MB_ICONSTOP "FixTemp no pudo activar el lector real de temperatura. La instalacion se cancelara para evitar mostrar datos incompletos."
     Abort
   ${EndIf}
-  IfSilent 0 +2
-    Exec '"$INSTDIR\FixTemp.exe"'
 !macroend
 
 !endif

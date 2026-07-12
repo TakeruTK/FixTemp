@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$InstallDir,
     [switch]$EnableAppStartup,
+    [switch]$RelaunchApp,
     [switch]$Uninstall
 )
 
@@ -16,6 +17,39 @@ $logFile = Join-Path $dataDirectory 'sensor-install.log'
 function Write-InstallLog([string]$Message) {
     New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
     Add-Content -LiteralPath $logFile -Value "$(Get-Date -Format o) $Message" -Encoding UTF8
+}
+
+function Start-FixTempRelaunch {
+    $appExecutable = Join-Path $InstallDir 'FixTemp.exe'
+    if (!(Test-Path -LiteralPath $appExecutable)) {
+        Write-InstallLog "No se pudo relanzar FixTemp: no existe $appExecutable."
+        return
+    }
+
+    $escapedApp = $appExecutable.Replace("'", "''")
+    $scriptPath = Join-Path $env:TEMP 'FixTemp-Relaunch.ps1'
+    $script = @"
+Start-Sleep -Seconds 8
+`$app = '$escapedApp'
+if (!(Test-Path -LiteralPath `$app)) { exit 0 }
+try {
+    `$taskName = 'FixTemp Relaunch'
+    Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false -ErrorAction SilentlyContinue
+    `$action = New-ScheduledTaskAction -Execute `$app
+    `$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(5)
+    `$principal = New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Highest
+    `$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 2)
+    Register-ScheduledTask -TaskName `$taskName -Action `$action -Trigger `$trigger -Principal `$principal -Settings `$settings -Force | Out-Null
+    Start-ScheduledTask -TaskName `$taskName
+    Start-Sleep -Seconds 20
+    Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false -ErrorAction SilentlyContinue
+} catch {
+    Start-Process -FilePath explorer.exe -ArgumentList "`"`$app`""
+}
+"@
+    Set-Content -LiteralPath $scriptPath -Value $script -Encoding UTF8 -Force
+    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath) -WindowStyle Hidden
+    Write-InstallLog 'Relanzado diferido de FixTemp programado.'
 }
 
 if ($Uninstall) {
@@ -119,6 +153,9 @@ if (!$validReading) {
 }
 
 Write-InstallLog "Lector verificado: CPU $($reading.cpu.temperature) C, fuente $($reading.cpu.temperatureSource)."
+if ($RelaunchApp) {
+    Start-FixTempRelaunch
+}
 exit 0
 } catch {
     Write-InstallLog "ERROR: $($_.Exception.Message)"
