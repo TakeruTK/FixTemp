@@ -340,7 +340,7 @@ export function buildExcelReport(report) {
 
   const s1rows = []
   let r = 1
-  s1rows.push(buildRow(r++, ['INFORME DE EQUIPO PULSEGUARD'], ss, [1]))
+  s1rows.push(buildRow(r++, ['INFORME DE EQUIPO FIXTEMP'], ss, [1]))
   s1rows.push(buildRow(r++, ['Generado el', fmtDate(Date.now())], ss, [5, 0]))
   s1rows.push(buildRow(r++, [], ss))
   s1rows.push(sectionRow(r++, 'IDENTIFICACIÓN DEL EQUIPO', ss))

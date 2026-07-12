@@ -7,6 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $taskName = 'FixTemp Sensors'
 $startupTaskName = 'FixTemp Startup'
+$legacyTaskName = 'PulseGuard Sensors'
+$legacyStartupTaskName = 'PulseGuard Startup'
 $dataDirectory = Join-Path $env:ProgramData 'FixTemp'
 $snapshot = Join-Path $dataDirectory 'sensors.json'
 $logFile = Join-Path $dataDirectory 'sensor-install.log'
@@ -21,12 +23,21 @@ if ($Uninstall) {
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
     Stop-ScheduledTask -TaskName $startupTaskName -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $startupTaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Stop-ScheduledTask -TaskName $legacyTaskName -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Stop-ScheduledTask -TaskName $legacyStartupTaskName -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $legacyStartupTaskName -Confirm:$false -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $dataDirectory -Recurse -Force -ErrorAction SilentlyContinue
     exit 0
 }
 
 try {
 Write-InstallLog 'Iniciando instalacion del lector de sensores.'
+
+Stop-ScheduledTask -TaskName $legacyTaskName -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
+Stop-ScheduledTask -TaskName $legacyStartupTaskName -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName $legacyStartupTaskName -Confirm:$false -ErrorAction SilentlyContinue
 
 $sensorDirectory = Join-Path $InstallDir 'resources\sensor-helper'
 $sensorExecutable = Join-Path $sensorDirectory 'FixTemp.Sensors.exe'

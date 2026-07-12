@@ -8,7 +8,7 @@ interface I18nContextValue {
   languageOptions: Array<{ code: AppLanguage; label: string; nativeLabel: string }>
 }
 
-const STORAGE_KEY = 'pulseguard-language'
+const STORAGE_KEY = 'fixtemp-language'
 
 const options: Array<{ code: AppLanguage; label: string; nativeLabel: string }> = [
   { code: 'es', label: 'Spanish', nativeLabel: 'Español' },

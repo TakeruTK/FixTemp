@@ -20,7 +20,7 @@ export interface UpdateState {
   download: UpdateDownloadState
 }
 
-const dismissedKey = 'pulseguard-dismissed-update-version'
+const dismissedKey = 'fixtemp-dismissed-update-version'
 const defaultState: UpdateState = {
   available: true,
   checking: false,

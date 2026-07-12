@@ -12,14 +12,14 @@ const safe = async (task, fallback) => {
 function pulseGuardDataRoot() {
   if (process.platform === 'win32') {
     return process.env.LOCALAPPDATA
-      ? path.join(process.env.LOCALAPPDATA, 'PulseGuard')
-      : path.join(os.homedir(), 'AppData', 'Local', 'PulseGuard')
+      ? path.join(process.env.LOCALAPPDATA, 'FixTemp')
+      : path.join(os.homedir(), 'AppData', 'Local', 'FixTemp')
   }
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Application Support', 'PulseGuard')
+    return path.join(os.homedir(), 'Library', 'Application Support', 'FixTemp')
   }
   const base = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config')
-  return path.join(base, 'PulseGuard')
+  return path.join(base, 'FixTemp')
 }
 
 export function getOverlayConfigPath() {

@@ -43,7 +43,7 @@
     "onlyBuiltDependencies": ["esbuild", "electron", "electron-builder", "electron-winstaller"]
   },
   "build": {
-    "appId": "cl.pulseguard.monitor",
+    "appId": "cl.fixtemp.monitor",
     "productName": "FixTemp",
     "artifactName": "FixTemp-Setup-${version}.${ext}",
     "asar": true,

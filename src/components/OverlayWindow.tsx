@@ -32,7 +32,7 @@ function OverlayMetricsPanel({ config }: { config: OverlayConfig }) {
   if (config.metrics.fps) items.push({ key: 'fps', label: 'FPS', value: data.fps === null || data.fps === undefined ? '—' : `${data.fps}`, tone: 'lime' })
 
   return <div className={`game-overlay ${config.scale}`} style={{ opacity: config.opacity / 100 }}>
-    <div className="overlay-brand"><i/>PULSEGUARD <span>LIVE</span></div>
+    <div className="overlay-brand"><i/>FIXTEMP <span>LIVE</span></div>
     <div className="overlay-values">{items.map(item => <div key={item.key}><span>{item.label}</span><b className={item.tone}>{item.value}</b></div>)}</div>
   </div>
 }

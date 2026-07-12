@@ -572,7 +572,7 @@ async function runStressCapture(baseline: Metrics, notes: string[], text: Health
 function saveDiagnostics(history: Diagnostic[], setHistory: (value: Diagnostic[]) => void, entry: Diagnostic) {
   const next = [...history, entry].slice(-20)
   setHistory(next)
-  localStorage.setItem('pulseguard-device-history', JSON.stringify(next))
+  localStorage.setItem('fixtemp-device-history', JSON.stringify(next))
 }
 
 export function DeviceHealth({ data }: { data: Metrics | null }) {
@@ -599,7 +599,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
   const [lastDiagnostic, setLastDiagnostic] = useState<Diagnostic | null>(null)
   const [history, setHistory] = useState<Diagnostic[]>(() => {
     try {
-      const parsed = JSON.parse(localStorage.getItem('pulseguard-device-history') || '[]')
+      const parsed = JSON.parse(localStorage.getItem('fixtemp-device-history') || '[]')
       return Array.isArray(parsed) ? parsed.map(migrateDiagnostic) : []
     } catch {
       return []
