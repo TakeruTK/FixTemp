@@ -26,7 +26,7 @@ function Start-FixTempRelaunch {
         return
     }
 
-    $cmdPath = Join-Path $env:TEMP 'FixTemp-Relaunch.cmd'
+    $scriptPath = Join-Path $env:TEMP 'FixTemp-Relaunch.ps1'
     $startupShortcutPath = $null
     try {
         $startupFolder = [Environment]::GetFolderPath('Startup')
@@ -34,28 +34,32 @@ function Start-FixTempRelaunch {
             $startupShortcutPath = Join-Path $startupFolder 'FixTemp-Relaunch.lnk'
         }
     } catch {}
-    $cmd = @"
-@echo off
-set "APP=$appExecutable"
-set "STARTUP_LINK=$startupShortcutPath"
-timeout /t 18 /nobreak >nul
-for /l %%i in (1,1,8) do (
-  start "" "%APP%"
-  timeout /t 8 /nobreak >nul
-  tasklist /FI "IMAGENAME eq FixTemp.exe" 2>nul | find /I "FixTemp.exe" >nul && goto done
-)
-:done
-if not "%STARTUP_LINK%"=="" del "%STARTUP_LINK%" >nul 2>nul
-del "%~f0" >nul 2>nul
+    $escapedAppExecutable = $appExecutable.Replace("'", "''")
+    $escapedStartupShortcutPath = if ($startupShortcutPath) { $startupShortcutPath.Replace("'", "''") } else { '' }
+    $script = @"
+`$app = '$escapedAppExecutable'
+`$startupLink = '$escapedStartupShortcutPath'
+Start-Sleep -Seconds 18
+for (`$i = 1; `$i -le 8; `$i++) {
+    Start-Process -FilePath `$app -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 8
+    if (Get-Process -Name 'FixTemp' -ErrorAction SilentlyContinue) { break }
+}
+if (![string]::IsNullOrWhiteSpace(`$startupLink)) {
+    Remove-Item -LiteralPath `$startupLink -Force -ErrorAction SilentlyContinue
+}
+Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
 "@
-    Set-Content -LiteralPath $cmdPath -Value $cmd -Encoding ASCII -Force
+    Set-Content -LiteralPath $scriptPath -Value $script -Encoding UTF8 -Force
 
     try {
         if ($startupShortcutPath) {
             $wsh = New-Object -ComObject WScript.Shell
             $shortcut = $wsh.CreateShortcut($startupShortcutPath)
-            $shortcut.TargetPath = $cmdPath
-            $shortcut.WorkingDirectory = Split-Path -Parent $cmdPath
+            $shortcut.TargetPath = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
+            $shortcut.Arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
+            $shortcut.WorkingDirectory = Split-Path -Parent $scriptPath
+            $shortcut.WindowStyle = 7
             $shortcut.Description = 'Relanzar FixTemp despues de actualizar'
             $shortcut.Save()
         }
@@ -63,9 +67,8 @@ del "%~f0" >nul 2>nul
         Write-InstallLog "No se pudo crear acceso de inicio temporal: $($_.Exception.Message)"
     }
 
-    Start-Process -FilePath explorer.exe -ArgumentList "`"$cmdPath`""
-    Start-Process -FilePath $cmdPath -WindowStyle Hidden
-    Write-InstallLog "Relanzado diferido de FixTemp programado con $cmdPath."
+    Start-Process -FilePath "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath) -WindowStyle Hidden
+    Write-InstallLog "Relanzado diferido de FixTemp programado con $scriptPath."
 }
 
 if ($Uninstall) {
