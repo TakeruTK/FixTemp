@@ -26,30 +26,46 @@ function Start-FixTempRelaunch {
         return
     }
 
-    $escapedApp = $appExecutable.Replace("'", "''")
-    $scriptPath = Join-Path $env:TEMP 'FixTemp-Relaunch.ps1'
-    $script = @"
-Start-Sleep -Seconds 8
-`$app = '$escapedApp'
-if (!(Test-Path -LiteralPath `$app)) { exit 0 }
-try {
-    `$taskName = 'FixTemp Relaunch'
-    Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false -ErrorAction SilentlyContinue
-    `$action = New-ScheduledTaskAction -Execute `$app
-    `$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(5)
-    `$principal = New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Highest
-    `$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 2)
-    Register-ScheduledTask -TaskName `$taskName -Action `$action -Trigger `$trigger -Principal `$principal -Settings `$settings -Force | Out-Null
-    Start-ScheduledTask -TaskName `$taskName
-    Start-Sleep -Seconds 20
-    Unregister-ScheduledTask -TaskName `$taskName -Confirm:`$false -ErrorAction SilentlyContinue
-} catch {
-    Start-Process -FilePath explorer.exe -ArgumentList "`"`$app`""
-}
+    $cmdPath = Join-Path $env:TEMP 'FixTemp-Relaunch.cmd'
+    $startupShortcutPath = $null
+    try {
+        $startupFolder = [Environment]::GetFolderPath('Startup')
+        if (![string]::IsNullOrWhiteSpace($startupFolder) -and (Test-Path -LiteralPath $startupFolder)) {
+            $startupShortcutPath = Join-Path $startupFolder 'FixTemp-Relaunch.lnk'
+        }
+    } catch {}
+    $cmd = @"
+@echo off
+set "APP=$appExecutable"
+set "STARTUP_LINK=$startupShortcutPath"
+timeout /t 18 /nobreak >nul
+for /l %%i in (1,1,8) do (
+  start "" "%APP%"
+  timeout /t 8 /nobreak >nul
+  tasklist /FI "IMAGENAME eq FixTemp.exe" 2>nul | find /I "FixTemp.exe" >nul && goto done
+)
+:done
+if not "%STARTUP_LINK%"=="" del "%STARTUP_LINK%" >nul 2>nul
+del "%~f0" >nul 2>nul
 "@
-    Set-Content -LiteralPath $scriptPath -Value $script -Encoding UTF8 -Force
-    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath) -WindowStyle Hidden
-    Write-InstallLog 'Relanzado diferido de FixTemp programado.'
+    Set-Content -LiteralPath $cmdPath -Value $cmd -Encoding ASCII -Force
+
+    try {
+        if ($startupShortcutPath) {
+            $wsh = New-Object -ComObject WScript.Shell
+            $shortcut = $wsh.CreateShortcut($startupShortcutPath)
+            $shortcut.TargetPath = $cmdPath
+            $shortcut.WorkingDirectory = Split-Path -Parent $cmdPath
+            $shortcut.Description = 'Relanzar FixTemp despues de actualizar'
+            $shortcut.Save()
+        }
+    } catch {
+        Write-InstallLog "No se pudo crear acceso de inicio temporal: $($_.Exception.Message)"
+    }
+
+    Start-Process -FilePath explorer.exe -ArgumentList "`"$cmdPath`""
+    Start-Process -FilePath $cmdPath -WindowStyle Hidden
+    Write-InstallLog "Relanzado diferido de FixTemp programado con $cmdPath."
 }
 
 if ($Uninstall) {
