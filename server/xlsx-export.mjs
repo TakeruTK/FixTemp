@@ -1,10 +1,10 @@
-// xlsx-export.mjs — Pure Node.js XLSX generator (no external deps)
+﻿// xlsx-export.mjs â€” Pure Node.js XLSX generator (no external deps)
 // Generates a complete .xlsx workbook with multiple sheets and embedded charts.
 // Uses only built-in node:zlib for ZIP deflate compression.
 
 import { deflateRawSync } from 'node:zlib'
 
-// ─── CRC32 ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ CRC32 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CRC_TABLE = new Uint32Array(256)
 for (let i = 0; i < 256; i++) {
@@ -18,12 +18,12 @@ function crc32(buf) {
   return (c ^ 0xFFFFFFFF) >>> 0
 }
 
-// ─── Binary helpers ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Binary helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function w16(b, o, v) { b[o] = v & 0xFF; b[o + 1] = (v >> 8) & 0xFF }
 function w32(b, o, v) { b[o] = v & 0xFF; b[o + 1] = (v >> 8) & 0xFF; b[o + 2] = (v >> 16) & 0xFF; b[o + 3] = (v >>> 24) & 0xFF }
 
-// ─── ZIP writer ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ ZIP writer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // files: Array<{ name: string, data: Buffer|string }>
 
 function buildZip(files) {
@@ -72,12 +72,12 @@ function buildZip(files) {
   return Buffer.concat([...parts, ...cdParts, eocd])
 }
 
-// ─── XML helpers ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ XML helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const xmlEsc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const v = val => val === null || val === undefined ? '' : String(val)
 
-// ─── Shared strings ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared strings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class SharedStrings {
   constructor() { this.map = new Map(); this.list = [] }
@@ -93,7 +93,7 @@ class SharedStrings {
   }
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Style indices (must match styles.xml below):
 // 0 = normal
 // 1 = bold header (dark bg, white text)
@@ -136,7 +136,7 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </cellXfs>
 </styleSheet>`
 
-// ─── Cell builder ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Cell builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function cell(col, row, value, ss, styleIdx = 0) {
   const ref = `${col}${row}`
@@ -171,7 +171,7 @@ function kv(rowNum, key, value, ss) {
   return buildRow(rowNum, [key, v(value)], ss, [5, 0])
 }
 
-// ─── Worksheet XML builder ────────────────────────────────────────────────────
+// â”€â”€â”€ Worksheet XML builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function sheet(rows, colWidths = [], drawingRel = null) {
   const cols = colWidths.length
@@ -188,7 +188,7 @@ function sheet(rows, colWidths = [], drawingRel = null) {
     `</worksheet>`
 }
 
-// ─── Chart XML ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Chart XML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CHART_COLORS = ['4472C4', 'ED7D31', 'A9D18E', 'FF0000', 'FFC000']
 
@@ -291,7 +291,7 @@ function drawingXml(chartRelId, fromRow, toRow, fromCol = 0, toCol = 9) {
 </xdr:wsDr>`
 }
 
-// ─── Relationship XML helpers ─────────────────────────────────────────────────
+// â”€â”€â”€ Relationship XML helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function relsXml(rels) {
   const items = rels.map(r => `<Relationship Id="${r.id}" Type="${r.type}" Target="${r.target}"/>`).join('')
@@ -308,7 +308,7 @@ const RT = {
   officeDocument: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
 }
 
-// ─── Main report builder ──────────────────────────────────────────────────────
+// â”€â”€â”€ Main report builder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function buildExcelReport(report) {
   const ss = new SharedStrings()
@@ -336,33 +336,33 @@ export function buildExcelReport(report) {
   const fmtNum = (n, d = 1) => (n === null || n === undefined || !isFinite(n)) ? '' : Number(n).toFixed(d)
   const gb = bytes => bytes ? (bytes / 1073741824).toFixed(1) + ' GB' : ''
 
-  // ── Sheet 1: Resumen ────────────────────────────────────────────────────────
+  // â”€â”€ Sheet 1: Resumen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s1rows = []
   let r = 1
-  s1rows.push(buildRow(r++, ['INFORME DE EQUIPO PULSEGUARD'], ss, [1]))
+  s1rows.push(buildRow(r++, ['INFORME DE EQUIPO FIXTEMP'], ss, [1]))
   s1rows.push(buildRow(r++, ['Generado el', fmtDate(Date.now())], ss, [5, 0]))
   s1rows.push(buildRow(r++, [], ss))
-  s1rows.push(sectionRow(r++, 'IDENTIFICACIÓN DEL EQUIPO', ss))
+  s1rows.push(sectionRow(r++, 'IDENTIFICACIÃ“N DEL EQUIPO', ss))
   s1rows.push(kv(r++, 'Nombre del equipo', hardware.hostname, ss))
   s1rows.push(kv(r++, 'Fabricante', fmt(sys.system?.manufacturer), ss))
   s1rows.push(kv(r++, 'Modelo del sistema', fmt(sys.system?.model), ss))
   s1rows.push(kv(r++, 'Tipo de sistema', fmt(sys.system?.systemType), ss))
-  s1rows.push(kv(r++, 'Número de serie', fmt(sys.system?.serial), ss))
+  s1rows.push(kv(r++, 'NÃºmero de serie', fmt(sys.system?.serial), ss))
   s1rows.push(buildRow(r++, [], ss))
   s1rows.push(sectionRow(r++, 'SISTEMA OPERATIVO', ss))
   s1rows.push(kv(r++, 'Sistema operativo', fmt(os.name), ss))
-  s1rows.push(kv(r++, 'Versión', `${fmt(os.version)} Build ${fmt(os.build)}`.trim(), ss))
+  s1rows.push(kv(r++, 'VersiÃ³n', `${fmt(os.version)} Build ${fmt(os.build)}`.trim(), ss))
   s1rows.push(kv(r++, 'Arquitectura', fmt(os.architecture), ss))
   s1rows.push(kv(r++, 'Instalado el', fmt(os.installDate), ss))
-  s1rows.push(kv(r++, 'Último arranque', fmt(os.lastBoot), ss))
+  s1rows.push(kv(r++, 'Ãšltimo arranque', fmt(os.lastBoot), ss))
   s1rows.push(kv(r++, 'Idioma', fmt(os.language), ss))
-  s1rows.push(kv(r++, 'Archivo de paginación', fmt(os.pageFile), ss))
+  s1rows.push(kv(r++, 'Archivo de paginaciÃ³n', fmt(os.pageFile), ss))
   s1rows.push(buildRow(r++, [], ss))
   s1rows.push(sectionRow(r++, 'COMPONENTES PRINCIPALES', ss))
   s1rows.push(kv(r++, 'CPU', fmt(cpu.brand), ss))
-  s1rows.push(kv(r++, 'Núcleos / Hilos', `${fmt(cpu.physicalCores)} / ${fmt(cpu.cores)}`, ss))
-  s1rows.push(kv(r++, 'Reloj máximo', cpu.speedMax ? `${cpu.speedMax} GHz` : '', ss))
+  s1rows.push(kv(r++, 'NÃºcleos / Hilos', `${fmt(cpu.physicalCores)} / ${fmt(cpu.cores)}`, ss))
+  s1rows.push(kv(r++, 'Reloj mÃ¡ximo', cpu.speedMax ? `${cpu.speedMax} GHz` : '', ss))
   s1rows.push(kv(r++, 'GPU principal', gpuControllers[0]?.model || fmt(gpu.model), ss))
   s1rows.push(kv(r++, 'VRAM', gpuControllers[0]?.vram ? `${gpuControllers[0].vram} MB` : (gpu.memoryTotal ? `${gpu.memoryTotal} MB` : ''), ss))
   s1rows.push(kv(r++, 'RAM total', sys.system?.totalMemoryGb ? `${sys.system.totalMemoryGb} GB` : (mem.total ? `${mem.total} GB` : ''), ss))
@@ -374,16 +374,16 @@ export function buildExcelReport(report) {
   s1rows.push(buildRow(r++, [], ss))
   s1rows.push(sectionRow(r++, 'SENSORES EN TIEMPO REAL', ss))
   s1rows.push(kv(r++, 'CPU Carga', gpu ? `${report.metrics?.cpu?.load ?? ''}%` : '', ss))
-  s1rows.push(kv(r++, 'CPU Temperatura', report.metrics?.cpu?.temperature !== null ? `${report.metrics?.cpu?.temperature ?? ''} °C` : 'No disponible', ss))
+  s1rows.push(kv(r++, 'CPU Temperatura', report.metrics?.cpu?.temperature !== null ? `${report.metrics?.cpu?.temperature ?? ''} Â°C` : 'No disponible', ss))
   s1rows.push(kv(r++, 'CPU Reloj', report.metrics?.cpu?.clock ? `${report.metrics.cpu.clock} MHz` : '', ss))
   s1rows.push(kv(r++, 'GPU Carga', `${gpu.load ?? ''}%`, ss))
-  s1rows.push(kv(r++, 'GPU Temperatura', gpu.temperature !== null ? `${gpu.temperature ?? ''} °C` : 'No disponible', ss))
+  s1rows.push(kv(r++, 'GPU Temperatura', gpu.temperature !== null ? `${gpu.temperature ?? ''} Â°C` : 'No disponible', ss))
   s1rows.push(kv(r++, 'GPU Reloj', `${gpu.clock ?? ''} MHz`, ss))
   s1rows.push(kv(r++, 'RAM Usada', `${mem.used ?? ''} / ${mem.total ?? ''} GB`, ss))
 
   const sheet1 = sheet(s1rows, [32, 48], null)
 
-  // ── Sheet 2: Procesador ─────────────────────────────────────────────────────
+  // â”€â”€ Sheet 2: Procesador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s2rows = []
   r = 1
@@ -393,20 +393,20 @@ export function buildExcelReport(report) {
   s2rows.push(kv(r++, 'Fabricante', fmt(cpu.manufacturer || cpu.vendor), ss))
   s2rows.push(kv(r++, 'Socket', fmt(cpu.socket), ss))
   s2rows.push(kv(r++, 'Arquitectura', fmt(cpu.architecture), ss))
-  s2rows.push(kv(r++, 'Núcleos físicos', fmt(cpu.physicalCores), ss))
-  s2rows.push(kv(r++, 'Hilos lógicos', fmt(cpu.cores), ss))
-  s2rows.push(kv(r++, 'Procesadores físicos', fmt(cpu.processors), ss))
+  s2rows.push(kv(r++, 'NÃºcleos fÃ­sicos', fmt(cpu.physicalCores), ss))
+  s2rows.push(kv(r++, 'Hilos lÃ³gicos', fmt(cpu.cores), ss))
+  s2rows.push(kv(r++, 'Procesadores fÃ­sicos', fmt(cpu.processors), ss))
   s2rows.push(kv(r++, 'Reloj base', cpu.speed ? `${cpu.speed} GHz` : '', ss))
-  s2rows.push(kv(r++, 'Reloj máximo', cpu.speedMax ? `${cpu.speedMax} GHz` : '', ss))
-  s2rows.push(kv(r++, 'Caché L2', cpu.l2CacheKb ? `${Number(cpu.l2CacheKb).toLocaleString()} KB` : '', ss))
-  s2rows.push(kv(r++, 'Caché L3', cpu.l3CacheKb ? `${Number(cpu.l3CacheKb).toLocaleString()} KB` : '', ss))
+  s2rows.push(kv(r++, 'Reloj mÃ¡ximo', cpu.speedMax ? `${cpu.speedMax} GHz` : '', ss))
+  s2rows.push(kv(r++, 'CachÃ© L2', cpu.l2CacheKb ? `${Number(cpu.l2CacheKb).toLocaleString()} KB` : '', ss))
+  s2rows.push(kv(r++, 'CachÃ© L3', cpu.l3CacheKb ? `${Number(cpu.l3CacheKb).toLocaleString()} KB` : '', ss))
   s2rows.push(kv(r++, 'Stepping', fmt(cpu.stepping), ss))
-  s2rows.push(kv(r++, 'Virtualización', cpu.virtualizationFirmwareEnabled ? 'Habilitada' : 'Deshabilitada', ss))
+  s2rows.push(kv(r++, 'VirtualizaciÃ³n', cpu.virtualizationFirmwareEnabled ? 'Habilitada' : 'Deshabilitada', ss))
   s2rows.push(kv(r++, 'TDP referencia', cpu.estimatedTdp ? `${cpu.estimatedTdp} W` : '', ss))
 
   const sheet2 = sheet(s2rows, [32, 48])
 
-  // ── Sheet 3: GPU ─────────────────────────────────────────────────────────────
+  // â”€â”€ Sheet 3: GPU â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s3rows = []
   r = 1
@@ -423,15 +423,15 @@ export function buildExcelReport(report) {
 
   const sheet3 = sheet(s3rows, [6, 35, 20, 12, 16, 20, 30, 20, 40, 20, 25])
 
-  // ── Sheet 4: RAM ─────────────────────────────────────────────────────────────
+  // â”€â”€ Sheet 4: RAM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s4rows = []
   r = 1
   s4rows.push(buildRow(r++, ['MEMORIA RAM'], ss, [1]))
-  s4rows.push(kv(r++, 'Capacidad máxima placa', memSum.maxCapacityGb ? `${memSum.maxCapacityGb} GB` : '', ss))
+  s4rows.push(kv(r++, 'Capacidad mÃ¡xima placa', memSum.maxCapacityGb ? `${memSum.maxCapacityGb} GB` : '', ss))
   s4rows.push(kv(r++, 'Slots totales / Ocupados', `${fmt(memSum.slots)} / ${fmt(memSum.populated)}`, ss))
   s4rows.push(buildRow(r++, [], ss))
-  const ramHeaders = ['Módulo#', 'Capacidad', 'Tipo', 'Vel. configurada (MHz)', 'Vel. rated (MHz)', 'Fabricante', 'Número de parte', 'Banco', 'Slot', 'Serie']
+  const ramHeaders = ['MÃ³dulo#', 'Capacidad', 'Tipo', 'Vel. configurada (MHz)', 'Vel. rated (MHz)', 'Fabricante', 'NÃºmero de parte', 'Banco', 'Slot', 'Serie']
   s4rows.push(headerRow(r++, ramHeaders, ss))
   for (let i = 0; i < ramModules.length; i++) {
     const m = ramModules[i]
@@ -441,11 +441,11 @@ export function buildExcelReport(report) {
 
   const sheet4 = sheet(s4rows, [8, 14, 8, 22, 18, 20, 28, 18, 18, 22])
 
-  // ── Sheet 5: Almacenamiento ──────────────────────────────────────────────────
+  // â”€â”€ Sheet 5: Almacenamiento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s5rows = []
   r = 1
-  const diskHeaders = ['Disco#', 'Modelo', 'Fabricante', 'Tipo', 'Interfaz', 'Tamaño', 'S.M.A.R.T.', 'Firmware', 'Número de serie']
+  const diskHeaders = ['Disco#', 'Modelo', 'Fabricante', 'Tipo', 'Interfaz', 'TamaÃ±o', 'S.M.A.R.T.', 'Firmware', 'NÃºmero de serie']
   s5rows.push(headerRow(r++, diskHeaders, ss))
   for (let i = 0; i < disks.length; i++) {
     const d = disks[i]
@@ -455,14 +455,14 @@ export function buildExcelReport(report) {
       for (const vol of d.volumes) {
         const volSize = vol.sizeGb ? `${Number(vol.sizeGb).toFixed(0)} GB` : ''
         const volFree = vol.freeGb ? `${Number(vol.freeGb).toFixed(0)} GB libres` : ''
-        s5rows.push(buildRow(r++, ['', `  └ ${fmt(vol.mount || vol.letter)}`, fmt(vol.label), fmt(vol.filesystem), '', volFree ? `${volFree} / ${volSize}` : volSize, '', '', ''], ss))
+        s5rows.push(buildRow(r++, ['', `  â”” ${fmt(vol.mount || vol.letter)}`, fmt(vol.label), fmt(vol.filesystem), '', volFree ? `${volFree} / ${volSize}` : volSize, '', '', ''], ss))
       }
     }
   }
 
   const sheet5 = sheet(s5rows, [6, 35, 20, 16, 14, 14, 12, 14, 28])
 
-  // ── Sheet 6: Sistema ─────────────────────────────────────────────────────────
+  // â”€â”€ Sheet 6: Sistema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s6rows = []
   r = 1
@@ -471,12 +471,12 @@ export function buildExcelReport(report) {
   s6rows.push(sectionRow(r++, 'PLACA MADRE', ss))
   s6rows.push(kv(r++, 'Fabricante', fmt(board.manufacturer), ss))
   s6rows.push(kv(r++, 'Modelo', fmt(board.model), ss))
-  s6rows.push(kv(r++, 'Versión', fmt(board.version), ss))
+  s6rows.push(kv(r++, 'VersiÃ³n', fmt(board.version), ss))
   s6rows.push(kv(r++, 'Serie', fmt(board.serial), ss))
   s6rows.push(buildRow(r++, [], ss))
   s6rows.push(sectionRow(r++, 'BIOS', ss))
   s6rows.push(kv(r++, 'Fabricante', fmt(bios.vendor), ss))
-  s6rows.push(kv(r++, 'Versión', fmt(bios.version), ss))
+  s6rows.push(kv(r++, 'VersiÃ³n', fmt(bios.version), ss))
   s6rows.push(kv(r++, 'Fecha', fmt(bios.releaseDate), ss))
   s6rows.push(buildRow(r++, [], ss))
 
@@ -500,7 +500,7 @@ export function buildExcelReport(report) {
 
   if (monitors.length) {
     s6rows.push(sectionRow(r++, 'MONITORES', ss))
-    s6rows.push(headerRow(r++, ['Nombre', 'Resolución', 'Estado'], ss))
+    s6rows.push(headerRow(r++, ['Nombre', 'ResoluciÃ³n', 'Estado'], ss))
     for (const m of monitors) {
       const res = m.screenWidth && m.screenHeight ? `${m.screenWidth} x ${m.screenHeight}` : ''
       s6rows.push(buildRow(r++, [fmt(m.name), res, fmt(m.status)], ss))
@@ -509,11 +509,11 @@ export function buildExcelReport(report) {
 
   const sheet6 = sheet(s6rows, [28, 45])
 
-  // ── Sheet 7: Historial (with line chart) ────────────────────────────────────
+  // â”€â”€ Sheet 7: Historial (with line chart) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s7rows = []
   r = 1
-  s7rows.push(buildRow(r++, ['HISTORIAL DE RENDIMIENTO (últimos 2 min)'], ss, [1]))
+  s7rows.push(buildRow(r++, ['HISTORIAL DE RENDIMIENTO (Ãºltimos 2 min)'], ss, [1]))
   r++
   const histHeaders = ['Tiempo (s)', 'CPU %', 'GPU %', 'RAM %']
   s7rows.push(headerRow(r++, histHeaders, ss))
@@ -531,40 +531,40 @@ export function buildExcelReport(report) {
   const sheet7RelId = history.length > 1 ? 'rId1' : null
   const sheet7 = sheet(s7rows, [14, 10, 10, 10], sheet7RelId)
 
-  // ── Sheet 8: Prueba de estrés ────────────────────────────────────────────────
+  // â”€â”€ Sheet 8: Prueba de estrÃ©s â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const s8rows = []
   r = 1
   const samples = stress?.samples || []
   const summary = stress?.summary || null
 
-  s8rows.push(buildRow(r++, ['PRUEBA DE ESTRÉS'], ss, [1]))
+  s8rows.push(buildRow(r++, ['PRUEBA DE ESTRÃ‰S'], ss, [1]))
   s8rows.push(buildRow(r++, [], ss))
 
   if (stress) {
     const typeNames = { cpu: 'Procesador', gpu: 'GPU', memory: 'Memoria RAM', disk: 'Disco' }
     s8rows.push(kv(r++, 'Componente', typeNames[stress.type] || stress.type, ss))
     s8rows.push(kv(r++, 'Intensidad', `${stress.intensity}%`, ss))
-    s8rows.push(kv(r++, 'Duración configurada', `${stress.duration}s`, ss))
-    s8rows.push(kv(r++, 'Estado', stress.stopReason === 'completed' ? 'Completada' : stress.stopReason === 'temperature' ? 'Corte térmico' : stress.stopReason || 'Detenida', ss))
+    s8rows.push(kv(r++, 'DuraciÃ³n configurada', `${stress.duration}s`, ss))
+    s8rows.push(kv(r++, 'Estado', stress.stopReason === 'completed' ? 'Completada' : stress.stopReason === 'temperature' ? 'Corte tÃ©rmico' : stress.stopReason || 'Detenida', ss))
     s8rows.push(kv(r++, 'Iniciada', fmtDate(stress.startedAt), ss))
     if (stress.stoppedAt) s8rows.push(kv(r++, 'Finalizada', fmtDate(stress.stoppedAt), ss))
     s8rows.push(buildRow(r++, [], ss))
     if (summary) {
       s8rows.push(sectionRow(r++, 'RESUMEN', ss))
       s8rows.push(kv(r++, 'Muestras', summary.samples, ss))
-      s8rows.push(kv(r++, 'Actividad máxima', `${summary.peakActivity} ${samples[0]?.activityUnit || '%'}`, ss))
+      s8rows.push(kv(r++, 'Actividad mÃ¡xima', `${summary.peakActivity} ${samples[0]?.activityUnit || '%'}`, ss))
       s8rows.push(kv(r++, 'Actividad media', `${fmtNum(summary.averageActivity)} ${samples[0]?.activityUnit || '%'}`, ss))
-      s8rows.push(kv(r++, 'Temperatura base', summary.baselineTemperature !== null ? `${summary.baselineTemperature} °C` : 'No disponible', ss))
-      s8rows.push(kv(r++, 'Temperatura máxima', summary.peakTemperature !== null ? `${summary.peakTemperature} °C` : 'No disponible', ss))
-      s8rows.push(kv(r++, 'Delta térmico', summary.temperatureDelta !== null ? `${summary.temperatureDelta >= 0 ? '+' : ''}${summary.temperatureDelta} °C` : '', ss))
+      s8rows.push(kv(r++, 'Temperatura base', summary.baselineTemperature !== null ? `${summary.baselineTemperature} Â°C` : 'No disponible', ss))
+      s8rows.push(kv(r++, 'Temperatura mÃ¡xima', summary.peakTemperature !== null ? `${summary.peakTemperature} Â°C` : 'No disponible', ss))
+      s8rows.push(kv(r++, 'Delta tÃ©rmico', summary.temperatureDelta !== null ? `${summary.temperatureDelta >= 0 ? '+' : ''}${summary.temperatureDelta} Â°C` : '', ss))
       s8rows.push(kv(r++, 'Potencia media', summary.averagePower !== null ? `${fmtNum(summary.averagePower)} W` : 'No disponible', ss))
-      s8rows.push(kv(r++, 'Potencia máxima', summary.peakPower !== null ? `${fmtNum(summary.peakPower)} W` : 'No disponible', ss))
+      s8rows.push(kv(r++, 'Potencia mÃ¡xima', summary.peakPower !== null ? `${fmtNum(summary.peakPower)} W` : 'No disponible', ss))
       s8rows.push(kv(r++, 'Integridad', summary.verified ? 'Verificada' : 'Con errores', ss))
       s8rows.push(buildRow(r++, [], ss))
     }
   } else {
-    s8rows.push(buildRow(r++, ['No se ejecutó ninguna prueba de estrés en esta sesión.'], ss))
+    s8rows.push(buildRow(r++, ['No se ejecutÃ³ ninguna prueba de estrÃ©s en esta sesiÃ³n.'], ss))
   }
 
   let stressDataStart = r
@@ -572,7 +572,7 @@ export function buildExcelReport(report) {
   const stressRelId = samples.length > 1 ? 'rId1' : null
 
   if (samples.length) {
-    const stressHeaders = ['Tiempo (s)', 'Temperatura °C', 'Potencia W', 'Actividad', 'CPU %', 'GPU %', 'RAM %']
+    const stressHeaders = ['Tiempo (s)', 'Temperatura Â°C', 'Potencia W', 'Actividad', 'CPU %', 'GPU %', 'RAM %']
     s8rows.push(headerRow(r++, stressHeaders, ss))
     stressDataStart = r
     for (const sp of samples) {
@@ -585,7 +585,7 @@ export function buildExcelReport(report) {
 
   const sheet8 = sheet(s8rows, [28, 45], stressRelId)
 
-  // ─── Assemble XLSX package ───────────────────────────────────────────────────
+  // â”€â”€â”€ Assemble XLSX package â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const sheetDefs = [
     { name: 'Resumen',          xml: sheet1, rId: 'rId1' },
@@ -655,7 +655,7 @@ export function buildExcelReport(report) {
     const hasPowerData = samples.some(s => s.power !== null)
     const stressSeries = [
       { title: 'Actividad', valCol: 'D', color: '4472C4' },
-      ...(hasTempData ? [{ title: 'Temperatura °C', valCol: 'B', color: 'ED7D31' }] : []),
+      ...(hasTempData ? [{ title: 'Temperatura Â°C', valCol: 'B', color: 'ED7D31' }] : []),
       ...(hasPowerData ? [{ title: 'Potencia W',    valCol: 'C', color: 'FFC000' }] : []),
       { title: 'CPU %',   valCol: 'E', color: 'A9D18E' },
     ]

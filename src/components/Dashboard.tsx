@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useState } from 'react'
+﻿import { startTransition, useEffect, useState } from 'react'
 import { ArrowDown, ArrowUp, Clock3, HardDrive, MemoryStick, Radio, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useI18n } from '../i18n'
 import type { Metrics } from '../types'
@@ -67,7 +67,7 @@ const copy = {
     sensorsTitle: 'Sensores avanzados de CPU',
     sensorsText: 'La lectura completa de temperatura y ventilador requiere el lector avanzado de placa. Activalo para recuperar los sensores reales del procesador.',
     sensorsReady: 'Lectura avanzada activa',
-    sensorsReadyText: 'PulseGuard ya puede usar temperatura y ventilador reales desde el lector de placa.',
+    sensorsReadyText: 'FixTemp ya puede usar temperatura y ventilador reales desde el lector de placa.',
     sensorsInstall: 'Activar sensores avanzados',
     sensorsInstalling: 'Abriendo asistente...',
     sensorsRefresh: 'Actualizar estado',
@@ -109,7 +109,7 @@ const copy = {
     sensorsTitle: 'Advanced CPU sensors',
     sensorsText: 'Full temperature and fan readout requires the advanced motherboard reader. Enable it to recover real CPU sensors.',
     sensorsReady: 'Advanced readout active',
-    sensorsReadyText: 'PulseGuard can already use real temperature and fan readings from the motherboard reader.',
+    sensorsReadyText: 'FixTemp can already use real temperature and fan readings from the motherboard reader.',
     sensorsInstall: 'Enable advanced sensors',
     sensorsInstalling: 'Opening assistant...',
     sensorsRefresh: 'Refresh status',
@@ -122,46 +122,46 @@ const copy = {
     missingShort: 'Missing'
   },
   'zh-CN': {
-    processor: '处理器',
-    directSensor: '直接传感器',
-    limitedRead: '受限读数',
-    sensorNA: '传感器不可用',
-    cpuTemp: '温度',
-    cpuClock: '频率',
-    gpuTemp: '温度',
-    frequency: '频率',
-    fan: '风扇',
-    fanStopped: '0%（停止）',
-    noSensor: '无传感器',
-    fanUnavailable: '无可靠读数',
-    memory: '内存',
-    inUse: '已使用',
-    available: 'GB 可用',
+    processor: 'å¤„ç†å™¨',
+    directSensor: 'ç›´æŽ¥ä¼ æ„Ÿå™¨',
+    limitedRead: 'å—é™è¯»æ•°',
+    sensorNA: 'ä¼ æ„Ÿå™¨ä¸å¯ç”¨',
+    cpuTemp: 'æ¸©åº¦',
+    cpuClock: 'é¢‘çŽ‡',
+    gpuTemp: 'æ¸©åº¦',
+    frequency: 'é¢‘çŽ‡',
+    fan: 'é£Žæ‰‡',
+    fanStopped: '0%ï¼ˆåœæ­¢ï¼‰',
+    noSensor: 'æ— ä¼ æ„Ÿå™¨',
+    fanUnavailable: 'æ— å¯é è¯»æ•°',
+    memory: 'å†…å­˜',
+    inUse: 'å·²ä½¿ç”¨',
+    available: 'GB å¯ç”¨',
     of: '/',
-    liveTraffic: '实时流量',
-    network: '网络',
-    download: '下载',
-    upload: '上传',
-    capacity: '容量',
-    storage: '存储',
-    activity: '活动',
-    topProcesses: '主要进程',
-    activeFor: '运行',
-    process: '进程',
-    sensorsTitle: 'CPU 高级传感器',
-    sensorsText: '完整的温度和风扇读数需要高级主板读取器。启用它以恢复真实 CPU 传感器。',
-    sensorsReady: '高级读数已启用',
-    sensorsReadyText: 'PulseGuard 已可使用来自主板读取器的真实温度和风扇读数。',
-    sensorsInstall: '启用高级传感器',
-    sensorsInstalling: '正在打开向导...',
-    sensorsRefresh: '刷新状态',
-    sensorsLaunched: '已打开 Windows 提权向导。完成后请等待几秒再刷新状态。',
-    sensorsError: '无法启动传感器向导。',
-    sensorsLimited: '受限模式',
-    sensorsSource: '来源',
-    sensorsRecommendation: '建议',
-    okShort: '正常',
-    missingShort: '缺失'
+    liveTraffic: 'å®žæ—¶æµé‡',
+    network: 'ç½‘ç»œ',
+    download: 'ä¸‹è½½',
+    upload: 'ä¸Šä¼ ',
+    capacity: 'å®¹é‡',
+    storage: 'å­˜å‚¨',
+    activity: 'æ´»åŠ¨',
+    topProcesses: 'ä¸»è¦è¿›ç¨‹',
+    activeFor: 'è¿è¡Œ',
+    process: 'è¿›ç¨‹',
+    sensorsTitle: 'CPU é«˜çº§ä¼ æ„Ÿå™¨',
+    sensorsText: 'å®Œæ•´çš„æ¸©åº¦å’Œé£Žæ‰‡è¯»æ•°éœ€è¦é«˜çº§ä¸»æ¿è¯»å–å™¨ã€‚å¯ç”¨å®ƒä»¥æ¢å¤çœŸå®ž CPU ä¼ æ„Ÿå™¨ã€‚',
+    sensorsReady: 'é«˜çº§è¯»æ•°å·²å¯ç”¨',
+    sensorsReadyText: 'FixTemp å·²å¯ä½¿ç”¨æ¥è‡ªä¸»æ¿è¯»å–å™¨çš„çœŸå®žæ¸©åº¦å’Œé£Žæ‰‡è¯»æ•°ã€‚',
+    sensorsInstall: 'å¯ç”¨é«˜çº§ä¼ æ„Ÿå™¨',
+    sensorsInstalling: 'æ­£åœ¨æ‰“å¼€å‘å¯¼...',
+    sensorsRefresh: 'åˆ·æ–°çŠ¶æ€',
+    sensorsLaunched: 'å·²æ‰“å¼€ Windows ææƒå‘å¯¼ã€‚å®ŒæˆåŽè¯·ç­‰å¾…å‡ ç§’å†åˆ·æ–°çŠ¶æ€ã€‚',
+    sensorsError: 'æ— æ³•å¯åŠ¨ä¼ æ„Ÿå™¨å‘å¯¼ã€‚',
+    sensorsLimited: 'å—é™æ¨¡å¼',
+    sensorsSource: 'æ¥æº',
+    sensorsRecommendation: 'å»ºè®®',
+    okShort: 'æ­£å¸¸',
+    missingShort: 'ç¼ºå¤±'
   }
 } as const
 
@@ -288,7 +288,7 @@ export function Dashboard({ data }: { data: Metrics }) {
   const directSensor = data.hardwareSensor?.status === 'active'
   const limitedSensors = !sensorStatus?.directActive || !sensorStatus?.cpuFanAvailable || !sensorStatus?.cpuTempAvailable
   const cpuClockRange = data.cpu.clockMin && data.cpu.clockMax && Math.abs(data.cpu.clockMax - data.cpu.clockMin) >= 5
-    ? ` · ${data.cpu.clockMin}–${data.cpu.clockMax}` : ''
+    ? ` Â· ${data.cpu.clockMin}â€“${data.cpu.clockMax}` : ''
   const cpuClock = data.cpu.clock !== null ? `${data.cpu.clock} MHz${cpuClockRange}` : text.sensorNA
   const cpuTempProgress = normalize(data.cpu.temperature, 100)
   const cpuClockProgress = normalize(data.cpu.clock, Math.max(data.cpu.clockMax || 0, data.cpu.clock || 0, 5200))
@@ -330,7 +330,7 @@ export function Dashboard({ data }: { data: Metrics }) {
             <b>{text.sensorsLimited}</b>
             <small>
               CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}
-              {' · '}
+              {' Â· '}
               CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}
             </small>
           </div>
@@ -354,7 +354,7 @@ export function Dashboard({ data }: { data: Metrics }) {
       history={data.history.map(h => h.cpu)}
       badge={directSensor ? text.directSensor : text.limitedRead}
       stats={[
-        { label: text.cpuTemp, value: data.cpu.temperature !== null ? `${data.cpu.temperature}°C` : text.sensorNA, progress: cpuTempProgress },
+        { label: text.cpuTemp, value: data.cpu.temperature !== null ? `${data.cpu.temperature}Â°C` : text.sensorNA, progress: cpuTempProgress },
         { label: text.cpuClock, value: cpuClock, progress: cpuClockProgress },
         { label: text.fan, value: cpuFanValue, progress: cpuFanProgress }
       ]}
@@ -368,8 +368,8 @@ export function Dashboard({ data }: { data: Metrics }) {
       history={data.history.map(h => h.gpu)}
       badge={data.capabilities?.gpu.source || data.gpu.vendor || undefined}
       stats={[
-        { label: text.gpuTemp, value: data.gpu.temperature !== null ? `${data.gpu.temperature}°C` : text.noSensor, progress: gpuTempProgress },
-        { label: text.frequency, value: data.gpu.clock ? `${data.gpu.clock} MHz` : '—', progress: gpuClockProgress },
+        { label: text.gpuTemp, value: data.gpu.temperature !== null ? `${data.gpu.temperature}Â°C` : text.noSensor, progress: gpuTempProgress },
+        { label: text.frequency, value: data.gpu.clock ? `${data.gpu.clock} MHz` : 'â€”', progress: gpuClockProgress },
         { label: text.fan, value: gpuFanValue, progress: gpuFanProgress }
       ]}
     />

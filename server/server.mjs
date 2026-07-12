@@ -25,14 +25,14 @@ const stressWorkerPath = process.resourcesPath && runtimeDir.includes('app.asar'
 const systemInfoScript = process.resourcesPath && runtimeDir.includes('app.asar')
   ? path.join(process.resourcesPath, 'app.asar.unpacked/server/system-info.ps1')
   : path.join(runtimeDir, 'system-info.ps1')
-const windowsProgramDataPath = process.env.PULSEGUARD_PROGRAMDATA || process.env.ProgramData || process.env.PROGRAMDATA || 'C:\\ProgramData'
+const windowsProgramDataPath = process.env.FIXTEMP_PROGRAMDATA || process.env.PULSEGUARD_PROGRAMDATA || process.env.ProgramData || process.env.PROGRAMDATA || 'C:\\ProgramData'
 const hardwareSnapshotPath = process.platform === 'win32'
-  ? path.join(windowsProgramDataPath, 'PulseGuard', 'sensors.json')
+  ? path.join(windowsProgramDataPath, 'FixTemp', 'sensors.json')
   : null
 const sensorHelperPath = process.platform === 'win32'
   ? (process.resourcesPath && runtimeDir.includes('app.asar')
-      ? path.join(process.resourcesPath, 'sensor-helper', 'PulseGuard.Sensors.exe')
-      : path.resolve(runtimeDir, '../sensor-helper/publish/win-x64/PulseGuard.Sensors.exe'))
+      ? path.join(process.resourcesPath, 'sensor-helper', 'FixTemp.Sensors.exe')
+      : path.resolve(runtimeDir, '../sensor-helper/publish/win-x64/FixTemp.Sensors.exe'))
   : null
 const sensorInstallScriptPath = process.platform === 'win32'
   ? (process.resourcesPath && runtimeDir.includes('app.asar')
@@ -54,7 +54,7 @@ const defaultOverlayConfig = {
   metrics: { cpu: true, gpu: true, ram: true, vram: true, temperatures: true, power: false, fps: false }
 }
 const app = express()
-const port = Number(process.env.PULSEGUARD_PORT || 4310)
+const port = Number(process.env.FIXTEMP_PORT || process.env.PULSEGUARD_PORT || 4310)
 app.use((req, res, next) => {
   if (!['POST', 'PUT', 'PATCH'].includes(req.method)) {
     req.body = {}
@@ -105,7 +105,7 @@ app.use((req, res, next) => {
   req.on('error', error => finish(() => next(error)))
 })
 
-let appManifest = { name: 'pulseguard-monitor', version: '0.5.0' }
+let appManifest = { name: 'fixtemp-monitor', version: '0.5.0' }
 readFile(packageJsonPath, 'utf8').then(value => {
   const parsed = parseJsonText(value)
   appManifest = { name: parsed.name || appManifest.name, version: parsed.version || appManifest.version }
@@ -404,7 +404,7 @@ if (sensorHelperPath && existsSync(sensorHelperPath)) setTimeout(startSensorFall
 let cpuFanFallbackPromise = null
 async function refreshWindowsCpuFanFallback() {
   if (process.platform !== 'win32') return
-  if (process.env.PULSEGUARD_DISABLE_FAN_WMI === '1') return
+  if (process.env.FIXTEMP_DISABLE_FAN_WMI === '1' || process.env.PULSEGUARD_DISABLE_FAN_WMI === '1') return
   if (Date.now() - (state.sensorUpdatedAt.fan || 0) <= 5000) return
   const script = `
 $ErrorActionPreference = 'SilentlyContinue'
@@ -514,7 +514,7 @@ function parseNvidiaLine(line) {
   mark('gpu')
 }
 function startNvidiaSmiLoop() {
-  if (nvidiaSmiChild || process.env.PULSEGUARD_DISABLE_NVIDIA_SMI === '1') return
+  if (nvidiaSmiChild || process.env.FIXTEMP_DISABLE_NVIDIA_SMI === '1' || process.env.PULSEGUARD_DISABLE_NVIDIA_SMI === '1') return
   try {
     nvidiaSmiChild = spawn('nvidia-smi', [
       '--query-gpu=name,utilization.gpu,temperature.gpu,clocks.gr,memory.used,memory.total,fan.speed,power.draw,power.limit',
@@ -705,7 +705,7 @@ const canonicalMount = mount => {
   return normalized.replace(/[\\/]+$/, '')
 }
 const benchmarkChunkSize = 4 * 1024 ** 2
-const benchmarkSizeMb = () => Math.max(32, Math.min(Number(process.env.PULSEGUARD_BENCHMARK_MB) || 192, 512))
+const benchmarkSizeMb = () => Math.max(32, Math.min(Number(process.env.FIXTEMP_BENCHMARK_MB || process.env.PULSEGUARD_BENCHMARK_MB) || 192, 512))
 const sameVolume = (left, right) => {
   const normalizedLeft = canonicalMount(left)
   const normalizedRight = canonicalMount(right)
@@ -717,14 +717,14 @@ const benchmarkRoots = mount => {
   const roots = []
   const normalizedMount = canonicalMount(mount)
   const tempRoot = process.env.TEMP || os.tmpdir()
-  if (sameVolume(tempRoot, normalizedMount)) roots.push(path.join(tempRoot, 'PulseGuard-Benchmark'))
+  if (sameVolume(tempRoot, normalizedMount)) roots.push(path.join(tempRoot, 'FixTemp-Benchmark'))
   if (process.platform === 'win32') {
-    roots.push(path.join(normalizedMount, 'Users', 'Public', 'Documents', 'PulseGuard-Benchmark'))
+    roots.push(path.join(normalizedMount, 'Users', 'Public', 'Documents', 'FixTemp-Benchmark'))
   } else {
-    roots.push(path.join(normalizedMount, 'tmp', 'PulseGuard-Benchmark'))
-    roots.push(path.join(normalizedMount, 'var', 'tmp', 'PulseGuard-Benchmark'))
+    roots.push(path.join(normalizedMount, 'tmp', 'FixTemp-Benchmark'))
+    roots.push(path.join(normalizedMount, 'var', 'tmp', 'FixTemp-Benchmark'))
   }
-  roots.push(path.join(normalizedMount, 'PulseGuard-Benchmark'))
+  roots.push(path.join(normalizedMount, 'FixTemp-Benchmark'))
   return [...new Set(roots)]
 }
 const currentWorkload = () => {
@@ -761,7 +761,7 @@ async function runStorageBenchmark(mount) {
   try {
     let lastDirectoryError = null
     for (const root of benchmarkRoots(normalizedMount)) {
-      const candidate = path.join(root, `pulseguard-benchmark-${crypto.randomUUID()}.bin`)
+      const candidate = path.join(root, `fixtemp-benchmark-${crypto.randomUUID()}.bin`)
       try {
         await mkdir(path.dirname(candidate), { recursive: true })
         handle = await open(candidate, 'w+')
@@ -974,7 +974,7 @@ app.post('/api/sensors/install', (_req, res) => {
 
   const escapedScript = sensorInstallScriptPath.replace(/'/g, "''")
   const escapedDir = appInstallDir.replace(/'/g, "''")
-  const installCommand = `Start-Process powershell.exe -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File ''${escapedScript}'' -InstallDir ''${escapedDir}'''`
+  const installCommand = `Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File ''${escapedScript}'' -InstallDir ''${escapedDir}'''`
 
   try {
     const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', installCommand], {
@@ -1121,7 +1121,7 @@ app.get('/api/export/excel', async (_req, res) => {
     const xlsx = buildExcelReport(report)
     const hostname = (metrics.hardware.hostname || 'equipo').replace(/[^a-zA-Z0-9_-]/g, '_')
     const date = new Date().toISOString().slice(0, 10)
-    const filename = `PulseGuard-${hostname}-${date}.xlsx`
+    const filename = `FixTemp-${hostname}-${date}.xlsx`
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
     res.setHeader('Content-Length', xlsx.length)
@@ -1194,9 +1194,9 @@ app.post('/api/stress/start', async (req, res) => {
   const intensity = Math.max(10, Math.min(Number(requested.intensity) || 70, 100))
   const duration = Math.max(10, Math.min(Number(requested.duration) || 60, 600))
   const temperatureLimit = Math.max(70, Math.min(Number(requested.temperatureLimit) || 90, 95))
-  if (type === 'cpu' && process.env.PULSEGUARD_TEST_ALLOW_NO_TEMP !== '1' && (metrics.cpu.temperature === null || Date.now() - (state.sensorUpdatedAt.temperature || 0) > 5000))
+  if (type === 'cpu' && process.env.FIXTEMP_TEST_ALLOW_NO_TEMP !== '1' && process.env.PULSEGUARD_TEST_ALLOW_NO_TEMP !== '1' && (metrics.cpu.temperature === null || Date.now() - (state.sensorUpdatedAt.temperature || 0) > 5000))
     return res.status(412).json({ error: 'No hay una temperatura CPU real y reciente. La prueba se bloqueó por seguridad.' })
-  if (type === 'gpu' && process.env.PULSEGUARD_TEST_ALLOW_NO_TEMP !== '1' && (metrics.gpu.temperature === null || Date.now() - (state.sensorUpdatedAt.gpu || 0) > 5000))
+  if (type === 'gpu' && process.env.FIXTEMP_TEST_ALLOW_NO_TEMP !== '1' && process.env.PULSEGUARD_TEST_ALLOW_NO_TEMP !== '1' && (metrics.gpu.temperature === null || Date.now() - (state.sensorUpdatedAt.gpu || 0) > 5000))
     return res.status(412).json({ error: 'No hay una temperatura GPU real y reciente. La prueba se bloqueo por seguridad.' })
   const workerCount = type === 'cpu' ? Math.max(1, os.cpus().length) : type === 'gpu' ? 0 : 1
   state.workerStats.clear()
@@ -1357,7 +1357,7 @@ app.post('/api/speedtest/stop', (_req, res) => {
 })
 
 // ── Auto-update ─────────────────────────────────────────────────────────────
-const UPDATE_MANIFEST_URL = process.env.PULSEGUARD_UPDATE_URL || 'http://localhost:3500/updates/latest'
+const UPDATE_MANIFEST_URL = process.env.FIXTEMP_UPDATE_URL || process.env.PULSEGUARD_UPDATE_URL || 'https://api.github.com/repos/TakeruTK/FixTemp/releases/latest'
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000
 
 let updateDownload = { active: false, percent: 0, filePath: null, error: null }
@@ -1386,7 +1386,31 @@ const syncUpdateCurrentVersion = async () => {
   }
 }
 
-const compareVersions = (left, right) => left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' })
+const normalizeVersion = value => String(value || '').trim().replace(/^v/i, '')
+const compareVersions = (left, right) => normalizeVersion(left).localeCompare(normalizeVersion(right), undefined, { numeric: true, sensitivity: 'base' })
+
+const parseUpdateManifest = (manifest, current) => {
+  if (typeof manifest.version === 'string' || typeof manifest.downloadUrl === 'string') {
+    return {
+      latest: normalizeVersion(manifest.version || current),
+      downloadUrl: typeof manifest.downloadUrl === 'string' ? manifest.downloadUrl : null,
+      changelog: typeof manifest.changelog === 'string' ? manifest.changelog : ''
+    }
+  }
+
+  if (typeof manifest.tag_name === 'string' || Array.isArray(manifest.assets)) {
+    const assets = Array.isArray(manifest.assets) ? manifest.assets : []
+    const installer = assets.find(asset => /\.exe$/i.test(asset?.name || '') && /setup|installer|fixtemp|pulseguard/i.test(asset?.name || ''))
+      || assets.find(asset => /\.exe$/i.test(asset?.name || ''))
+    return {
+      latest: normalizeVersion(manifest.tag_name || manifest.name || current),
+      downloadUrl: typeof installer?.browser_download_url === 'string' ? installer.browser_download_url : null,
+      changelog: typeof manifest.body === 'string' ? manifest.body : ''
+    }
+  }
+
+  return { latest: current, downloadUrl: null, changelog: '' }
+}
 
 async function performUpdateCheck(force = false) {
   const current = await syncUpdateCurrentVersion()
@@ -1400,10 +1424,28 @@ async function performUpdateCheck(force = false) {
 
   updateState = { ...updateState, currentVersion: current, checking: true, error: null }
   try {
-    const response = await fetch(UPDATE_MANIFEST_URL, { signal: AbortSignal.timeout(8000) })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const response = await fetch(UPDATE_MANIFEST_URL, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'FixTemp-Updater' },
+      signal: AbortSignal.timeout(8000)
+    })
+    if (response.status === 404) {
+      updateState = {
+        ...updateState,
+        checking: false,
+        checkedAt: Date.now(),
+        currentVersion: current,
+        latestVersion: current,
+        hasUpdate: false,
+        downloadUrl: null,
+        changelog: 'No hay actualizaciones publicadas todavia.',
+        error: null
+      }
+      return updateState
+    }
+    if (!response.ok) throw new Error(`No se pudo consultar el servidor de actualizaciones (HTTP ${response.status}).`)
     const manifest = await response.json()
-    const latest = typeof manifest.version === 'string' && manifest.version.trim() ? manifest.version.trim() : current
+    const parsed = parseUpdateManifest(manifest, current)
+    const latest = parsed.latest || current
     const hasUpdate = latest !== current && compareVersions(latest, current) > 0
     updateState = {
       ...updateState,
@@ -1412,8 +1454,8 @@ async function performUpdateCheck(force = false) {
       currentVersion: current,
       latestVersion: latest,
       hasUpdate,
-      downloadUrl: typeof manifest.downloadUrl === 'string' ? manifest.downloadUrl : null,
-      changelog: typeof manifest.changelog === 'string' ? manifest.changelog : '',
+      downloadUrl: parsed.downloadUrl,
+      changelog: parsed.changelog,
       error: null
     }
   } catch (err) {
@@ -1463,19 +1505,25 @@ app.post('/api/update/download', (req, res) => {
   if (!downloadUrl) return res.status(400).json({ error: 'downloadUrl requerido' })
   if (updateDownload.active) return res.status(409).json({ error: 'Descarga en progreso' })
 
-  const filePath = path.join(os.tmpdir(), 'PulseGuard-Setup.exe')
+  const filePath = path.join(os.tmpdir(), 'FixTemp-Setup.exe')
   updateDownload = { active: true, percent: 0, filePath: null, error: null }
   res.json({ started: true, filePath })
 
-  const client = downloadUrl.startsWith('https') ? https : http
   const fileStream = createWriteStream(filePath)
 
   const doGet = (url, depth = 0) => {
     if (depth > 5) { updateDownload = { active: false, percent: 0, filePath: null, error: 'Demasiadas redirecciones' }; return }
+    const client = url.startsWith('https') ? https : http
     client.get(url, (incoming) => {
       if (incoming.statusCode >= 300 && incoming.statusCode < 400 && incoming.headers.location) {
         incoming.resume()
-        doGet(incoming.headers.location, depth + 1)
+        doGet(new URL(incoming.headers.location, url).toString(), depth + 1)
+        return
+      }
+      if (incoming.statusCode !== 200) {
+        incoming.resume()
+        fileStream.destroy()
+        updateDownload = { active: false, percent: 0, filePath: null, error: `Descarga rechazada por el servidor (HTTP ${incoming.statusCode || 'sin codigo'}).` }
         return
       }
       const total = parseInt(incoming.headers['content-length'] || '0')
@@ -1505,7 +1553,7 @@ app.post('/api/update/install', (req, res) => {
   if (!filePath || !existsSync(filePath)) return res.status(400).json({ error: 'Instalador no encontrado en: ' + filePath })
   res.json({ installing: true })
   setTimeout(() => {
-    spawn(filePath, ['/S'], { detached: true, stdio: 'ignore', windowsHide: false }).unref()
+    spawn(filePath, ['/S'], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
     process.exit(0)
   }, 600)
 })
@@ -1530,7 +1578,7 @@ const dist = process.resourcesPath && runtimeDir.includes('app.asar')
 app.use(express.static(dist))
 app.get('/{*path}', (_req, res) => res.sendFile(path.join(dist, 'index.html')))
 
-const httpServer = app.listen(port, '127.0.0.1', () => console.log(`PulseGuard API: http://127.0.0.1:${port}`))
+const httpServer = app.listen(port, '127.0.0.1', () => console.log(`FixTemp API: http://127.0.0.1:${port}`))
 httpServer.ref()
 
 process.on('SIGINT', () => { state.sensorProcess?.kill(); nvidiaSmiChild?.kill(); stopStress('shutdown'); process.exit(0) })

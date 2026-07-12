@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { ArrowDownToLine, Bell, ChevronDown, Menu, RefreshCw, Wifi, WifiOff, X } from 'lucide-react'
 import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
@@ -63,28 +63,28 @@ const titles = {
     updateError: 'Could not check for updates'
   },
   'zh-CN': {
-    dashboard: { eyebrow: '控制中心', title: '系统状态' },
-    stress: { eyebrow: '诊断', title: '测试工作台' },
-    hardware: { eyebrow: '信息', title: '我的设备' },
-    health: { eyebrow: '本地诊断', title: '设备健康' },
-    overlay: { eyebrow: '屏幕显示', title: '悬浮层' },
-    settings: { eyebrow: '偏好设置', title: '设置' },
-    updates: { eyebrow: '维护', title: '更新' },
-    live: '实时',
-    offline: '离线',
-    profile: '配置',
-    defaultProfile: '默认',
-    connecting: '正在连接设备...',
-    reading: '正在读取传感器和进程',
-    updateAvailable: '发现新版本',
-    updateReady: '可以安装',
-    updateChecking: '正在检查更新...',
-    updateDownload: '下载',
-    updateDownloading: '下载中',
-    updateInstall: '安装并重启',
-    updateLater: '稍后',
-    updateOpen: '打开更新',
-    updateError: '无法检查更新'
+    dashboard: { eyebrow: 'æŽ§åˆ¶ä¸­å¿ƒ', title: 'ç³»ç»ŸçŠ¶æ€' },
+    stress: { eyebrow: 'è¯Šæ–­', title: 'æµ‹è¯•å·¥ä½œå°' },
+    hardware: { eyebrow: 'ä¿¡æ¯', title: 'æˆ‘çš„è®¾å¤‡' },
+    health: { eyebrow: 'æœ¬åœ°è¯Šæ–­', title: 'è®¾å¤‡å¥åº·' },
+    overlay: { eyebrow: 'å±å¹•æ˜¾ç¤º', title: 'æ‚¬æµ®å±‚' },
+    settings: { eyebrow: 'åå¥½è®¾ç½®', title: 'è®¾ç½®' },
+    updates: { eyebrow: 'ç»´æŠ¤', title: 'æ›´æ–°' },
+    live: 'å®žæ—¶',
+    offline: 'ç¦»çº¿',
+    profile: 'é…ç½®',
+    defaultProfile: 'é»˜è®¤',
+    connecting: 'æ­£åœ¨è¿žæŽ¥è®¾å¤‡...',
+    reading: 'æ­£åœ¨è¯»å–ä¼ æ„Ÿå™¨å’Œè¿›ç¨‹',
+    updateAvailable: 'å‘çŽ°æ–°ç‰ˆæœ¬',
+    updateReady: 'å¯ä»¥å®‰è£…',
+    updateChecking: 'æ­£åœ¨æ£€æŸ¥æ›´æ–°...',
+    updateDownload: 'ä¸‹è½½',
+    updateDownloading: 'ä¸‹è½½ä¸­',
+    updateInstall: 'å®‰è£…å¹¶é‡å¯',
+    updateLater: 'ç¨åŽ',
+    updateOpen: 'æ‰“å¼€æ›´æ–°',
+    updateError: 'æ— æ³•æ£€æŸ¥æ›´æ–°'
   }
 } as const
 
@@ -107,7 +107,7 @@ function MainApp() {
         <div className="topbar__actions">
           <span className={`connection ${connected ? '' : 'offline'}`}>{connected ? <Wifi size={14}/> : <WifiOff size={14}/>} {connected ? text.live : text.offline}</span>
           <button className={`icon-button ${updateBadge ? 'has-alert' : ''}`} onClick={() => setView('updates')} title={text.updateOpen}><Bell size={17}/><i/></button>
-          <button className="profile"><span>PG</span><div><small>{text.profile}</small><strong>{text.defaultProfile}</strong></div><ChevronDown size={14}/></button>
+          <button className="profile"><span>FT</span><div><small>{text.profile}</small><strong>{text.defaultProfile}</strong></div><ChevronDown size={14}/></button>
         </div>
       </header>
       <div className="content-area">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface UpdateDownloadState {
   active: boolean
@@ -20,7 +20,7 @@ export interface UpdateState {
   download: UpdateDownloadState
 }
 
-const dismissedKey = 'pulseguard-dismissed-update-version'
+const dismissedKey = 'fixtemp-dismissed-update-version'
 const defaultState: UpdateState = {
   available: true,
   checking: false,
@@ -43,7 +43,7 @@ export function useUpdates() {
 
   const loadStatus = useCallback(async () => {
     const response = await fetch('/api/update/status', { signal: AbortSignal.timeout(8000) })
-    if (!response.ok) throw new Error('No se pudo leer el estado de actualización')
+    if (!response.ok) throw new Error('No se pudo leer el estado de actualizaciÃ³n')
     const result = await response.json() as UpdateState
     setState(result)
     if (!result.hasUpdate || result.latestVersion !== dismissedVersion) {

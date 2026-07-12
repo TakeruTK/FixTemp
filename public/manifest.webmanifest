@@ -1,7 +1,7 @@
-{
-  "name": "PulseGuard — Salud del dispositivo",
-  "short_name": "PulseGuard",
-  "description": "Diagnóstico, monitoreo y pruebas locales para PC, móvil y tablet.",
+﻿{
+  "name": "FixTemp â€” Salud del dispositivo",
+  "short_name": "FixTemp",
+  "description": "DiagnÃ³stico, monitoreo y pruebas locales para PC, mÃ³vil y tablet.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#080b0d",

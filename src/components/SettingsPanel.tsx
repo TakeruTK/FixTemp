@@ -1,48 +1,48 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { ArrowDownToLine, Check, Globe2, Languages, MonitorCog, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useI18n } from '../i18n'
 
 const copy = {
   es: {
     eyebrow: 'AJUSTES DEL PROGRAMA',
-    title: 'Preferencias de PulseGuard',
-    description: 'Desde aquí puedes controlar el idioma de toda la interfaz. El cambio se aplica al instante y queda guardado para futuras aperturas del programa.',
+    title: 'Preferencias de FixTemp',
+    description: 'Desde aquÃ­ puedes controlar el idioma de toda la interfaz. El cambio se aplica al instante y queda guardado para futuras aperturas del programa.',
     current: 'Idioma actual',
     section: 'IDIOMA DE LA INTERFAZ',
     helper: 'Selecciona el idioma principal para paneles, pruebas, inventario, overlay y textos de apoyo.',
-    immediate: 'Aplicación inmediata',
-    immediateDetail: 'No necesitas reiniciar la aplicación.',
-    coverage: 'Cobertura de traducción',
+    immediate: 'AplicaciÃ³n inmediata',
+    immediateDetail: 'No necesitas reiniciar la aplicaciÃ³n.',
+    coverage: 'Cobertura de traducciÃ³n',
     coverageDetail: 'Se actualiza toda la interfaz principal del programa.',
     persistence: 'Guardado local',
     persistenceDetail: 'La preferencia queda guardada en este equipo.',
     selected: 'Seleccionado',
-    cardTitle: 'Qué cambia con este ajuste',
+    cardTitle: 'QuÃ© cambia con este ajuste',
     bullets: [
       'Panel principal y barra lateral',
-      'Pruebas de estrés y salud del dispositivo',
+      'Pruebas de estrÃ©s y salud del dispositivo',
       'Inventario de hardware y overlay',
       'Mensajes de ayuda, estados y etiquetas'
     ],
     updateSection: 'ACTUALIZACIONES',
-    updateHelper: 'Comprueba si hay una nueva versión disponible y descárgala directamente desde aquí.',
-    checkBtn: 'Buscar actualización',
+    updateHelper: 'Comprueba si hay una nueva versiÃ³n disponible y descÃ¡rgala directamente desde aquÃ­.',
+    checkBtn: 'Buscar actualizaciÃ³n',
     checking: 'Verificando...',
-    upToDate: 'Ya tienes la versión más reciente.',
-    updateAvailable: 'Nueva versión disponible:',
-    currentVer: 'Tu versión',
-    downloadBtn: 'Descargar actualización',
+    upToDate: 'Ya tienes la versiÃ³n mÃ¡s reciente.',
+    updateAvailable: 'Nueva versiÃ³n disponible:',
+    currentVer: 'Tu versiÃ³n',
+    downloadBtn: 'Descargar actualizaciÃ³n',
     downloading: 'Descargando...',
     installBtn: 'Instalar y reiniciar',
     installing: 'Lanzando instalador...',
     updateError: 'Error al verificar',
     downloadError: 'Error al descargar',
-    noUrl: 'El servidor no proporcionó URL de descarga.',
+    noUrl: 'El servidor no proporcionÃ³ URL de descarga.',
     changelog: 'Novedades'
   },
   en: {
     eyebrow: 'APPLICATION SETTINGS',
-    title: 'PulseGuard preferences',
+    title: 'FixTemp preferences',
     description: 'Here you can control the language of the entire interface. The change is applied instantly and stays saved for future launches.',
     current: 'Current language',
     section: 'INTERFACE LANGUAGE',
@@ -78,41 +78,41 @@ const copy = {
     changelog: 'What\'s new'
   },
   'zh-CN': {
-    eyebrow: '程序设置',
-    title: 'PulseGuard 偏好设置',
-    description: '你可以在这里控制整个界面的语言。切换会立即生效，并会保存到下次打开程序。',
-    current: '当前语言',
-    section: '界面语言',
-    helper: '选择仪表板、测试、硬件信息、悬浮层和辅助文本使用的主要语言。',
-    immediate: '即时生效',
-    immediateDetail: '无需重新启动程序。',
-    coverage: '翻译覆盖范围',
-    coverageDetail: '程序主要界面都会更新。',
-    persistence: '本地保存',
-    persistenceDetail: '该偏好会保存在这台电脑上。',
-    selected: '已选择',
-    cardTitle: '此设置会影响的内容',
+    eyebrow: 'ç¨‹åºè®¾ç½®',
+    title: 'FixTemp åå¥½è®¾ç½®',
+    description: 'ä½ å¯ä»¥åœ¨è¿™é‡ŒæŽ§åˆ¶æ•´ä¸ªç•Œé¢çš„è¯­è¨€ã€‚åˆ‡æ¢ä¼šç«‹å³ç”Ÿæ•ˆï¼Œå¹¶ä¼šä¿å­˜åˆ°ä¸‹æ¬¡æ‰“å¼€ç¨‹åºã€‚',
+    current: 'å½“å‰è¯­è¨€',
+    section: 'ç•Œé¢è¯­è¨€',
+    helper: 'é€‰æ‹©ä»ªè¡¨æ¿ã€æµ‹è¯•ã€ç¡¬ä»¶ä¿¡æ¯ã€æ‚¬æµ®å±‚å’Œè¾…åŠ©æ–‡æœ¬ä½¿ç”¨çš„ä¸»è¦è¯­è¨€ã€‚',
+    immediate: 'å³æ—¶ç”Ÿæ•ˆ',
+    immediateDetail: 'æ— éœ€é‡æ–°å¯åŠ¨ç¨‹åºã€‚',
+    coverage: 'ç¿»è¯‘è¦†ç›–èŒƒå›´',
+    coverageDetail: 'ç¨‹åºä¸»è¦ç•Œé¢éƒ½ä¼šæ›´æ–°ã€‚',
+    persistence: 'æœ¬åœ°ä¿å­˜',
+    persistenceDetail: 'è¯¥åå¥½ä¼šä¿å­˜åœ¨è¿™å°ç”µè„‘ä¸Šã€‚',
+    selected: 'å·²é€‰æ‹©',
+    cardTitle: 'æ­¤è®¾ç½®ä¼šå½±å“çš„å†…å®¹',
     bullets: [
-      '主面板与侧边栏',
-      '压力测试与设备健康',
-      '硬件清单与悬浮层',
-      '帮助文本、状态与标签'
+      'ä¸»é¢æ¿ä¸Žä¾§è¾¹æ ',
+      'åŽ‹åŠ›æµ‹è¯•ä¸Žè®¾å¤‡å¥åº·',
+      'ç¡¬ä»¶æ¸…å•ä¸Žæ‚¬æµ®å±‚',
+      'å¸®åŠ©æ–‡æœ¬ã€çŠ¶æ€ä¸Žæ ‡ç­¾'
     ],
-    updateSection: '更新',
-    updateHelper: '检查是否有新版本，并直接在此下载。',
-    checkBtn: '检查更新',
-    checking: '检查中...',
-    upToDate: '你已经是最新版本。',
-    updateAvailable: '有新版本可用：',
-    currentVer: '当前版本',
-    downloadBtn: '下载更新',
-    downloading: '下载中...',
-    installBtn: '安装并重启',
-    installing: '正在启动安装程序...',
-    updateError: '检查出错',
-    downloadError: '下载出错',
-    noUrl: '服务器未提供下载链接。',
-    changelog: '更新内容'
+    updateSection: 'æ›´æ–°',
+    updateHelper: 'æ£€æŸ¥æ˜¯å¦æœ‰æ–°ç‰ˆæœ¬ï¼Œå¹¶ç›´æŽ¥åœ¨æ­¤ä¸‹è½½ã€‚',
+    checkBtn: 'æ£€æŸ¥æ›´æ–°',
+    checking: 'æ£€æŸ¥ä¸­...',
+    upToDate: 'ä½ å·²ç»æ˜¯æœ€æ–°ç‰ˆæœ¬ã€‚',
+    updateAvailable: 'æœ‰æ–°ç‰ˆæœ¬å¯ç”¨ï¼š',
+    currentVer: 'å½“å‰ç‰ˆæœ¬',
+    downloadBtn: 'ä¸‹è½½æ›´æ–°',
+    downloading: 'ä¸‹è½½ä¸­...',
+    installBtn: 'å®‰è£…å¹¶é‡å¯',
+    installing: 'æ­£åœ¨å¯åŠ¨å®‰è£…ç¨‹åº...',
+    updateError: 'æ£€æŸ¥å‡ºé”™',
+    downloadError: 'ä¸‹è½½å‡ºé”™',
+    noUrl: 'æœåŠ¡å™¨æœªæä¾›ä¸‹è½½é“¾æŽ¥ã€‚',
+    changelog: 'æ›´æ–°å†…å®¹'
   }
 } as const
 
@@ -143,7 +143,7 @@ export function UpdatePanel() {
     try {
       const res = await fetch('/api/update/check', { signal: AbortSignal.timeout(10000) })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+      if (!res.ok) throw new Error(data.detail || data.error || `HTTP ${res.status}`)
       setInfo(data)
     } catch (err) {
       setCheckError(err instanceof Error ? err.message : String(err))
@@ -211,7 +211,7 @@ export function UpdatePanel() {
 
       {info && !info.hasUpdate && (
         <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>
-          ✓ {text.upToDate} <b style={{ color: 'var(--accent)' }}>v{info.currentVersion}</b>
+          âœ“ {text.upToDate} <b style={{ color: 'var(--accent)' }}>v{info.currentVersion}</b>
         </p>
       )}
 
@@ -288,34 +288,34 @@ function SensorPanel() {
         section: 'SENSORES AVANZADOS',
         helper: 'Habilita el acceso ampliado a sensores de motherboard para mejorar la lectura de temperatura y ventilador de CPU.',
         direct: 'Lectura directa activa',
-        directDetail: 'PulseGuard ya está usando el lector avanzado.',
+        directDetail: 'FixTemp ya estÃ¡ usando el lector avanzado.',
         limited: 'Lectura limitada',
         limitedDetail: 'El ventilador o la temperatura de CPU pueden seguir sin estar disponibles.',
         install: 'Habilitar sensores de placa',
         installing: 'Abriendo instalador...',
         refresh: 'Actualizar estado',
-        ok: 'Se abrió el instalador con permisos elevados. Cuando termine, espera unos segundos y actualiza el estado.',
+        ok: 'Se abriÃ³ el instalador con permisos elevados. Cuando termine, espera unos segundos y actualiza el estado.',
         error: 'No se pudo iniciar el instalador de sensores.'
       }
     : language === 'zh-CN'
       ? {
-          section: '高级传感器',
-          helper: '启用主板扩展传感器访问，以改进 CPU 温度和风扇读数。',
-          direct: '直接读数已启用',
-          directDetail: 'PulseGuard 已经在使用高级传感器读取器。',
-          limited: '读数受限',
-          limitedDetail: 'CPU 风扇或温度可能仍不可用。',
-          install: '启用主板传感器',
-          installing: '正在打开安装程序...',
-          refresh: '刷新状态',
-          ok: '已打开提权安装程序。完成后请等待几秒再刷新状态。',
-          error: '无法启动传感器安装程序。'
+          section: 'é«˜çº§ä¼ æ„Ÿå™¨',
+          helper: 'å¯ç”¨ä¸»æ¿æ‰©å±•ä¼ æ„Ÿå™¨è®¿é—®ï¼Œä»¥æ”¹è¿› CPU æ¸©åº¦å’Œé£Žæ‰‡è¯»æ•°ã€‚',
+          direct: 'ç›´æŽ¥è¯»æ•°å·²å¯ç”¨',
+          directDetail: 'FixTemp å·²ç»åœ¨ä½¿ç”¨é«˜çº§ä¼ æ„Ÿå™¨è¯»å–å™¨ã€‚',
+          limited: 'è¯»æ•°å—é™',
+          limitedDetail: 'CPU é£Žæ‰‡æˆ–æ¸©åº¦å¯èƒ½ä»ä¸å¯ç”¨ã€‚',
+          install: 'å¯ç”¨ä¸»æ¿ä¼ æ„Ÿå™¨',
+          installing: 'æ­£åœ¨æ‰“å¼€å®‰è£…ç¨‹åº...',
+          refresh: 'åˆ·æ–°çŠ¶æ€',
+          ok: 'å·²æ‰“å¼€ææƒå®‰è£…ç¨‹åºã€‚å®ŒæˆåŽè¯·ç­‰å¾…å‡ ç§’å†åˆ·æ–°çŠ¶æ€ã€‚',
+          error: 'æ— æ³•å¯åŠ¨ä¼ æ„Ÿå™¨å®‰è£…ç¨‹åºã€‚'
         }
       : {
           section: 'ADVANCED SENSORS',
           helper: 'Enable extended motherboard sensor access to improve CPU temperature and fan readings.',
           direct: 'Direct readout active',
-          directDetail: 'PulseGuard is already using the advanced sensor reader.',
+          directDetail: 'FixTemp is already using the advanced sensor reader.',
           limited: 'Limited readout',
           limitedDetail: 'CPU fan or temperature may still be unavailable.',
           install: 'Enable motherboard sensors',

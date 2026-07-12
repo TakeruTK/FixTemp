@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+﻿import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 export type AppLanguage = 'es' | 'en' | 'zh-CN'
 
@@ -8,12 +8,12 @@ interface I18nContextValue {
   languageOptions: Array<{ code: AppLanguage; label: string; nativeLabel: string }>
 }
 
-const STORAGE_KEY = 'pulseguard-language'
+const STORAGE_KEY = 'fixtemp-language'
 
 const options: Array<{ code: AppLanguage; label: string; nativeLabel: string }> = [
-  { code: 'es', label: 'Spanish', nativeLabel: 'Español' },
+  { code: 'es', label: 'Spanish', nativeLabel: 'EspaÃ±ol' },
   { code: 'en', label: 'English', nativeLabel: 'English' },
-  { code: 'zh-CN', label: 'Chinese (Mandarin)', nativeLabel: '简体中文' }
+  { code: 'zh-CN', label: 'Chinese (Mandarin)', nativeLabel: 'ç®€ä½“ä¸­æ–‡' }
 ]
 
 function normalizeLanguage(value?: string | null): AppLanguage {

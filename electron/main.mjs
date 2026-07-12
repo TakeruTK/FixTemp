@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, screen, shell } from 'electron'
+﻿import { app, BrowserWindow, dialog, screen, shell } from 'electron'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -9,7 +9,7 @@ let overlayTimer
 const appUrl = 'http://127.0.0.1:4310'
 
 function bootHtml(message) {
-  return `data:text/html;charset=UTF-8,${encodeURIComponent(`<!doctype html><html lang="es"><head><meta charset="utf-8"/><title>PulseGuard</title><style>html,body{margin:0;height:100%;background:#080b0d;color:#e6ecee;font-family:Segoe UI,Arial,sans-serif}body{display:grid;place-items:center}.card{width:min(520px,88vw);padding:28px 30px;border:1px solid #1d2529;background:linear-gradient(145deg,#12181b,#0f1417);box-shadow:0 18px 50px rgba(0,0,0,.35)}.eyebrow{margin:0 0 10px;color:#42e6f5;font:600 12px monospace;letter-spacing:.14em;text-transform:uppercase}.title{margin:0 0 10px;font-size:28px}.text{margin:0;color:#8b989e;line-height:1.7}.bar{height:8px;margin:18px 0 0;background:#1a2327;border:1px solid #243136;overflow:hidden}.bar i{display:block;width:35%;height:100%;background:linear-gradient(90deg,#42e6f5,#b9f65c);animation:move 1.2s ease-in-out infinite}@keyframes move{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}</style></head><body><div class="card"><p class="eyebrow">PulseGuard</p><h1 class="title">Iniciando el monitor</h1><p class="text">${message}</p><div class="bar"><i></i></div></div></body></html>`) }`
+  return `data:text/html;charset=UTF-8,${encodeURIComponent(`<!doctype html><html lang="es"><head><meta charset="utf-8"/><title>FixTemp</title><style>html,body{margin:0;height:100%;background:#080b0d;color:#e6ecee;font-family:Segoe UI,Arial,sans-serif}body{display:grid;place-items:center}.card{width:min(520px,88vw);padding:28px 30px;border:1px solid #1d2529;background:linear-gradient(145deg,#12181b,#0f1417);box-shadow:0 18px 50px rgba(0,0,0,.35)}.eyebrow{margin:0 0 10px;color:#42e6f5;font:600 12px monospace;letter-spacing:.14em;text-transform:uppercase}.title{margin:0 0 10px;font-size:28px}.text{margin:0;color:#8b989e;line-height:1.7}.bar{height:8px;margin:18px 0 0;background:#1a2327;border:1px solid #243136;overflow:hidden}.bar i{display:block;width:35%;height:100%;background:linear-gradient(90deg,#42e6f5,#b9f65c);animation:move 1.2s ease-in-out infinite}@keyframes move{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}</style></head><body><div class="card"><p class="eyebrow">FixTemp</p><h1 class="title">Iniciando el monitor</h1><p class="text">${message}</p><div class="bar"><i></i></div></div></body></html>`) }`
 }
 
 async function waitForServerReady(timeoutMs = 20000) {
@@ -27,7 +27,7 @@ async function waitForServerReady(timeoutMs = 20000) {
 const singleInstance = app.requestSingleInstanceLock()
 if (!singleInstance) app.quit()
 
-app.setName('PulseGuard')
+app.setName('FixTemp')
 app.commandLine.appendSwitch('disable-background-networking')
 app.commandLine.appendSwitch('disable-component-update')
 app.commandLine.appendSwitch('disable-domain-reliability')
@@ -47,7 +47,7 @@ async function createWindow() {
     show: false,
     backgroundColor: '#080b0d',
     icon: path.join(__dirname, '../assets/icon.ico'),
-    title: 'PulseGuard',
+    title: 'FixTemp',
     autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
@@ -64,13 +64,13 @@ async function createWindow() {
     return { action: 'deny' }
   })
   mainWindow.on('closed', () => { overlayWindow?.destroy(); overlayWindow = null; app.quit() })
-  await mainWindow.loadURL(bootHtml('Estamos iniciando el servicio local y preparando la interfaz. Esto puede tardar unos segundos según el equipo.'))
+  await mainWindow.loadURL(bootHtml('Estamos iniciando el servicio local y preparando la interfaz. Esto puede tardar unos segundos segÃºn el equipo.'))
   mainWindow.show()
 
   let navigated = false
   mainWindow.webContents.on('did-fail-load', async (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
     if (!isMainFrame || validatedURL.startsWith('data:text/html')) return
-    await mainWindow.loadURL(bootHtml(`La interfaz aún no responde (${errorCode}: ${errorDescription}). Reintentando automáticamente…`))
+    await mainWindow.loadURL(bootHtml(`La interfaz aÃºn no responde (${errorCode}: ${errorDescription}). Reintentando automÃ¡ticamenteâ€¦`))
     const ready = await waitForServerReady(10000)
     if (ready && !mainWindow.isDestroyed()) {
       try { await mainWindow.loadURL(appUrl); navigated = true } catch {}
@@ -79,7 +79,7 @@ async function createWindow() {
 
   const ready = await waitForServerReady()
   if (!ready) {
-    await mainWindow.loadURL(bootHtml('El servicio interno tardó demasiado en responder. Cierra esta ventana y vuelve a intentar. Si persiste, avísame para dejarlo corregido en la beta.'))
+    await mainWindow.loadURL(bootHtml('El servicio interno tardÃ³ demasiado en responder. Cierra esta ventana y vuelve a intentar. Si persiste, avÃ­same para dejarlo corregido en la beta.'))
     return
   }
   await mainWindow.loadURL(appUrl)
@@ -157,8 +157,8 @@ app.on('second-instance', () => {
 })
 
 if (singleInstance) app.whenReady().then(createWindow).catch((error) => {
-  console.error('No se pudo iniciar PulseGuard:', error)
-  dialog.showErrorBox('PulseGuard no pudo iniciar', error.message)
+  console.error('No se pudo iniciar FixTemp:', error)
+  dialog.showErrorBox('FixTemp no pudo iniciar', error.message)
   app.quit()
 })
 app.on('before-quit', () => { if (overlayTimer) clearInterval(overlayTimer) })

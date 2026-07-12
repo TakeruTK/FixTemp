@@ -1,4 +1,4 @@
-import { parentPort, workerData } from 'node:worker_threads'
+﻿import { parentPort, workerData } from 'node:worker_threads'
 import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -65,7 +65,7 @@ async function memoryStress() {
 // Uses synchronous-to-disk writes plus reads and byte verification. The file is
 // always removed, including cancellation and worker errors.
 async function diskStress() {
-  const filename = path.join(os.tmpdir(), `pulseguard-stress-${process.pid}-${workerData.workerIndex || 0}.tmp`)
+  const filename = path.join(os.tmpdir(), `fixtemp-stress-${process.pid}-${workerData.workerIndex || 0}.tmp`)
   const blockSize = 4 * 1024 * 1024
   const block = Buffer.alloc(blockSize, 0xa5)
   const blocksPerPass = Math.max(2, Math.ceil(24 * workerData.intensity / 100))

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { BatteryCharging, CheckCircle2, Cpu, Download, FileText, Gauge, Globe, LoaderCircle, MemoryStick, MonitorSmartphone, Play, ShieldAlert, Smartphone, Thermometer, Trophy, Zap } from 'lucide-react'
 import { useI18n } from '../i18n'
 import type { Metrics, StressSession } from '../types'
@@ -59,55 +59,55 @@ const average = (values: number[]) => values.length ? values.reduce((sum, item) 
 const copy = {
   es: {
     fetchError: 'No se pudo leer',
-    quickDone: 'Diagnóstico rápido completado',
+    quickDone: 'DiagnÃ³stico rÃ¡pido completado',
     quickFailed: 'No fue posible completar todas las pruebas',
-    fullDone: 'Evaluación completa terminada',
-    fullFailed: 'La evaluación completa no pudo finalizar',
-    notExported: 'Aún no se ha exportado un informe de pruebas.',
+    fullDone: 'EvaluaciÃ³n completa terminada',
+    fullFailed: 'La evaluaciÃ³n completa no pudo finalizar',
+    notExported: 'AÃºn no se ha exportado un informe de pruebas.',
     ready: 'Listo para evaluar',
     evalCpu: 'Evaluando CPU...',
     evalMemory: 'Evaluando memoria...',
     evalGpu: 'Evaluando GPU...',
-    preparingFull: 'Preparando la evaluación completa. El equipo puede ponerse lento.',
-    stressingAll: 'Estresando CPU, GPU, memoria y disco en simultáneo...',
+    preparingFull: 'Preparando la evaluaciÃ³n completa. El equipo puede ponerse lento.',
+    stressingAll: 'Estresando CPU, GPU, memoria y disco en simultÃ¡neo...',
     concurrentLoad: 'Aplicando carga concurrente. El equipo puede responder lento durante el proceso.',
     consolidating: 'Consolidando resultados y calculando el promedio final...',
     reportFailed: 'No se pudo exportar el informe',
-    reportReady: 'Informe exportado: {filename}. El tester ya puede enviarlo al equipo de análisis.',
-    quickNote: 'Prueba comparativa rápida ejecutada desde el navegador integrado.',
-    fullNote: 'Evaluación completa terminada sin incidencias adicionales.',
-    cpuTimeout: 'La prueba sostenida de CPU no terminó a tiempo y se detuvo de forma preventiva.',
+    reportReady: 'Informe exportado: {filename}. El tester ya puede enviarlo al equipo de anÃ¡lisis.',
+    quickNote: 'Prueba comparativa rÃ¡pida ejecutada desde el navegador integrado.',
+    fullNote: 'EvaluaciÃ³n completa terminada sin incidencias adicionales.',
+    cpuTimeout: 'La prueba sostenida de CPU no terminÃ³ a tiempo y se detuvo de forma preventiva.',
     cpuCouldNotRun: 'No se pudo ejecutar la prueba sostenida de CPU.',
-    fullNoDisk: 'No había un volumen disponible para benchmark de disco.',
-    fullNoCpuTemp: 'No había temperatura real reciente para la prueba sostenida de CPU.',
+    fullNoDisk: 'No habÃ­a un volumen disponible para benchmark de disco.',
+    fullNoCpuTemp: 'No habÃ­a temperatura real reciente para la prueba sostenida de CPU.',
     batteryProtected: 'GPU protegida por el navegador',
-    heroEyebrow: 'PC · MÓVIL · TABLET',
+    heroEyebrow: 'PC Â· MÃ“VIL Â· TABLET',
     heroTitle: 'Rendimiento del dispositivo',
-    heroDesc: 'Este panel distingue entre medición real, cobertura parcial y partes no expuestas por el sistema. La evaluación completa somete el equipo a carga real para obtener una comparación más sólida.',
-    currentIndex: 'ÍNDICE ACTUAL',
-    runningEyebrow: 'EVALUACIÓN EN CURSO',
-    runningTitle: 'Se están estresando varios componentes al mismo tiempo',
+    heroDesc: 'Este panel distingue entre mediciÃ³n real, cobertura parcial y partes no expuestas por el sistema. La evaluaciÃ³n completa somete el equipo a carga real para obtener una comparaciÃ³n mÃ¡s sÃ³lida.',
+    currentIndex: 'ÃNDICE ACTUAL',
+    runningEyebrow: 'EVALUACIÃ“N EN CURSO',
+    runningTitle: 'Se estÃ¡n estresando varios componentes al mismo tiempo',
     machineSlow: 'El equipo puede ponerse lento',
     important: 'Importante',
-    importantDesc: 'Durante este proceso el equipo puede responder más lento y los ventiladores pueden subir. La duración cambia según el hardware, el disco y la disponibilidad de sensores.',
-    noThermalSensor: 'sin sensor térmico',
+    importantDesc: 'Durante este proceso el equipo puede responder mÃ¡s lento y los ventiladores pueden subir. La duraciÃ³n cambia segÃºn el hardware, el disco y la disponibilidad de sensores.',
+    noThermalSensor: 'sin sensor tÃ©rmico',
     loading: 'cargando',
     diskActive: 'ACTIVO',
     diskOk: 'OK',
     diskBusy: 'lectura y escritura real en curso',
     diskDone: 'benchmark consolidado',
-    verify: 'Qué se verifica',
+    verify: 'QuÃ© se verifica',
     measured: 'Medido',
     limited: 'Limitado',
     unavailable: 'No disponible',
     profile: 'Perfil detectado',
-    logicalThreads: 'hilos lógicos',
+    logicalThreads: 'hilos lÃ³gicos',
     visibleMemory: 'memoria visible',
     renderer: 'renderizador',
-    batteryStorage: 'Batería y almacenamiento',
-    batteryCurrent: 'Batería actual',
+    batteryStorage: 'BaterÃ­a y almacenamiento',
+    batteryCurrent: 'BaterÃ­a actual',
     batteryMissing: 'No presente o no expuesta',
-    pluggedIn: 'Conectado a energía',
+    pluggedIn: 'Conectado a energÃ­a',
     discharging: 'En descarga',
     noReading: 'Sin lectura disponible',
     cycles: 'ciclos',
@@ -115,13 +115,13 @@ const copy = {
     restricted: 'Restringido',
     browserNoCapacity: 'El navegador no expone la capacidad',
     testsAvailable: 'Pruebas disponibles',
-    testsDesc: 'Usa el diagnóstico rápido para una comparación local y la evaluación completa para capturar rendimiento, sensores y almacenamiento con mucha mayor cobertura.',
-    quickTest: 'Diagnóstico rápido',
-    fullTest: 'Evaluación completa del equipo',
-    fullNoteUi: 'La evaluación completa lanza carga concurrente y puede hacer que el equipo se note más pesado durante varios segundos.',
+    testsDesc: 'Usa el diagnÃ³stico rÃ¡pido para una comparaciÃ³n local y la evaluaciÃ³n completa para capturar rendimiento, sensores y almacenamiento con mucha mayor cobertura.',
+    quickTest: 'DiagnÃ³stico rÃ¡pido',
+    fullTest: 'EvaluaciÃ³n completa del equipo',
+    fullNoteUi: 'La evaluaciÃ³n completa lanza carga concurrente y puede hacer que el equipo se note mÃ¡s pesado durante varios segundos.',
     mode: 'MODO',
     full: 'FULL',
-    quick: 'RÁPIDO',
+    quick: 'RÃPIDO',
     coverage: 'de cobertura',
     operationsPerSec: 'operaciones/s',
     testFps: 'FPS de prueba',
@@ -131,42 +131,42 @@ const copy = {
     averageTrend: 'Promedio y tendencia',
     storedAverage: 'promedio guardado',
     localTests: 'pruebas locales',
-    vsBaseline: 'frente a línea base',
-    lastFull: 'última full',
-    comparativeNote: 'Para base de datos comparativa, la muestra más valiosa es la última evaluación completa, porque indica claramente qué partes fueron verificadas y con qué cobertura.',
+    vsBaseline: 'frente a lÃ­nea base',
+    lastFull: 'Ãºltima full',
+    comparativeNote: 'Para base de datos comparativa, la muestra mÃ¡s valiosa es la Ãºltima evaluaciÃ³n completa, porque indica claramente quÃ© partes fueron verificadas y con quÃ© cobertura.',
     reportTitle: 'Informe para pruebas',
-    reportDesc: 'Exporta el estado del equipo junto con la última evaluación local. Así la base de datos puede distinguir rendimiento, sensores disponibles y limitaciones del sistema.',
+    reportDesc: 'Exporta el estado del equipo junto con la Ãºltima evaluaciÃ³n local. AsÃ­ la base de datos puede distinguir rendimiento, sensores disponibles y limitaciones del sistema.',
     generating: 'Generando informe...',
     exportFull: 'Exportar informe completo',
-    recommend: 'Recomendado: ejecutar primero la evaluación completa y luego exportar. El informe no inventa datos ausentes.',
+    recommend: 'Recomendado: ejecutar primero la evaluaciÃ³n completa y luego exportar. El informe no inventa datos ausentes.',
     readyToSend: 'Listo para enviar',
-    latestFull: 'Última evaluación completa',
+    latestFull: 'Ãšltima evaluaciÃ³n completa',
     cpuPeak: 'pico CPU',
     gpuPeak: 'pico GPU',
     cpuPowerPeak: 'CPU pico',
     gpuPowerPeak: 'GPU pico',
-    impact: 'Impacto de PulseGuard',
+    impact: 'Impacto de FixTemp',
     serviceCpu: 'CPU del servicio',
     serviceRam: 'RAM del servicio',
     serviceNote: 'Medido por el propio servicio; no incluye la ventana Chromium.',
-    batteryMeasured: 'Nivel, ciclos y salud estimada si la batería lo reporta.',
+    batteryMeasured: 'Nivel, ciclos y salud estimada si la baterÃ­a lo reporta.',
     batteryUnavailable: 'No aplica o no se expone por el sistema.',
     diskMeasured: 'Lectura y escritura real sobre un volumen local.',
     diskUnavailable: 'No hay volumen listo para benchmark.',
-    cpuMeasured: 'Carga breve y carga sostenida con telemetría real cuando existe sensor.',
+    cpuMeasured: 'Carga breve y carga sostenida con telemetrÃ­a real cuando existe sensor.',
     gpuMeasured: 'Render WebGL 2 con FPS reales y seguimiento de temperatura/potencia si el sistema lo expone.',
     memoryMeasured: 'Actividad sostenida en RAM visible al usuario.',
     browserQuickName: 'equipo',
-    testRequiredNote: 'Completa la evaluación completa para desbloquear el informe y participar en el ranking.',
-    rankSending: 'Enviando al ranking global…',
-    rankSent: '¡Registrado en el ranking!',
+    testRequiredNote: 'Completa la evaluaciÃ³n completa para desbloquear el informe y participar en el ranking.',
+    rankSending: 'Enviando al ranking globalâ€¦',
+    rankSent: 'Â¡Registrado en el ranking!',
     rankFailed: 'No se pudo enviar al ranking.',
-    rankRetry: 'Reintentar envío',
-    rankPosition: 'Posición',
+    rankRetry: 'Reintentar envÃ­o',
+    rankPosition: 'PosiciÃ³n',
     rankOf: 'de {total} equipos',
     rankPercentile: 'Superas al',
     rankOfDevices: 'de los equipos',
-    scoreLabel: 'TU PUNTUACIÓN',
+    scoreLabel: 'TU PUNTUACIÃ“N',
     viewRanking: 'Ver ranking global'
   },
   en: {
@@ -193,7 +193,7 @@ const copy = {
     fullNoDisk: 'No volume was available for the disk benchmark.',
     fullNoCpuTemp: 'There was no recent real CPU temperature for the sustained test.',
     batteryProtected: 'GPU protected by the browser',
-    heroEyebrow: 'PC · MOBILE · TABLET',
+    heroEyebrow: 'PC Â· MOBILE Â· TABLET',
     heroTitle: 'Device performance',
     heroDesc: 'This panel distinguishes between real measurement, partial coverage, and parts not exposed by the system. The full evaluation applies real load to obtain a stronger comparison.',
     currentIndex: 'CURRENT INDEX',
@@ -257,7 +257,7 @@ const copy = {
     gpuPeak: 'GPU peak',
     cpuPowerPeak: 'CPU power peak',
     gpuPowerPeak: 'GPU power peak',
-    impact: 'PulseGuard impact',
+    impact: 'FixTemp impact',
     serviceCpu: 'service CPU',
     serviceRam: 'service RAM',
     serviceNote: 'Measured by the service itself; this does not include the Chromium window.',
@@ -270,7 +270,7 @@ const copy = {
     memoryMeasured: 'Sustained RAM activity visible to the user.',
     browserQuickName: 'device',
     testRequiredNote: 'Complete the full evaluation to unlock the report and join the ranking.',
-    rankSending: 'Sending to global ranking…',
+    rankSending: 'Sending to global rankingâ€¦',
     rankSent: 'Registered in the ranking!',
     rankFailed: 'Could not send to ranking.',
     rankRetry: 'Retry submission',
@@ -282,116 +282,116 @@ const copy = {
     viewRanking: 'View global ranking'
   },
   'zh-CN': {
-    fetchError: '无法读取',
-    quickDone: '快速诊断已完成',
-    quickFailed: '无法完成所有测试',
-    fullDone: '完整评估已完成',
-    fullFailed: '完整评估未能完成',
-    notExported: '尚未导出测试报告。',
-    ready: '准备评估',
-    evalCpu: '正在测试 CPU...',
-    evalMemory: '正在测试内存...',
-    evalGpu: '正在测试 GPU...',
-    preparingFull: '正在准备完整评估。设备可能会变慢。',
-    stressingAll: '正在同时压测 CPU、GPU、内存和磁盘...',
-    concurrentLoad: '正在施加并发负载。设备在过程中可能会变慢。',
-    consolidating: '正在汇总结果并计算最终平均值...',
-    reportFailed: '无法导出报告',
-    reportReady: '报告已导出：{filename}。测试人员现在可以发送给分析团队。',
-    quickNote: '在内置浏览器中执行的快速对比测试。',
-    fullNote: '完整评估已完成，没有额外异常。',
-    cpuTimeout: '持续 CPU 测试未能按时结束，已出于保护目的停止。',
-    cpuCouldNotRun: '无法执行持续 CPU 测试。',
-    fullNoDisk: '没有可用于磁盘基准测试的卷。',
-    fullNoCpuTemp: '没有可用于持续测试的近期真实 CPU 温度。',
-    batteryProtected: '浏览器保护的 GPU',
-    heroEyebrow: 'PC · 手机 · 平板',
-    heroTitle: '设备性能',
-    heroDesc: '此面板会区分真实测量、部分覆盖以及系统未暴露的部分。完整评估会对设备施加真实负载，以获得更可靠的对比结果。',
-    currentIndex: '当前指数',
-    runningEyebrow: '评估进行中',
-    runningTitle: '多个组件正在同时受压',
-    machineSlow: '设备可能会变慢',
-    important: '重要',
-    importantDesc: '在此过程中，设备响应可能会变慢，风扇也可能升速。耗时取决于硬件、磁盘和传感器可用性。',
-    noThermalSensor: '无温度传感器',
-    loading: '加载中',
-    diskActive: '运行中',
-    diskOk: '完成',
-    diskBusy: '真实读写进行中',
-    diskDone: '基准结果已汇总',
-    verify: '验证内容',
-    measured: '已测量',
-    limited: '受限',
-    unavailable: '不可用',
-    profile: '检测到的配置',
-    logicalThreads: '逻辑线程',
-    visibleMemory: '可见内存',
-    renderer: '渲染器',
-    batteryStorage: '电池与存储',
-    batteryCurrent: '当前电池',
-    batteryMissing: '不存在或未暴露',
-    pluggedIn: '已接通电源',
-    discharging: '放电中',
-    noReading: '无可用读数',
-    cycles: '循环',
-    storageUsed: '已用存储',
-    restricted: '受限',
-    browserNoCapacity: '浏览器未暴露容量信息',
-    testsAvailable: '可用测试',
-    testsDesc: '快速诊断用于本地对比；完整评估则能以更高覆盖率捕获性能、传感器与存储表现。',
-    quickTest: '快速诊断',
-    fullTest: '完整设备评估',
-    fullNoteUi: '完整评估会启动并发负载，设备在数秒内可能明显变重。',
-    mode: '模式',
-    full: '完整',
-    quick: '快速',
-    coverage: '覆盖率',
-    operationsPerSec: '次操作/秒',
-    testFps: '测试 FPS',
-    loopsPerSec: '轮次/秒',
-    readWrite: '读取/写入',
-    estimatedHealth: '估算健康度',
-    averageTrend: '平均值与趋势',
-    storedAverage: '已保存平均值',
-    localTests: '本地测试',
-    vsBaseline: '相对基线',
-    lastFull: '上次完整评估',
-    comparativeNote: '对于对比数据库而言，最有价值的样本是最近一次完整评估，因为它能清楚说明哪些部分已被验证以及覆盖率如何。',
-    reportTitle: '测试报告',
-    reportDesc: '导出设备状态以及最近一次本地评估。这样数据库就能区分性能、可用传感器和系统限制。',
-    generating: '正在生成报告...',
-    exportFull: '导出完整报告',
-    recommend: '建议先执行完整评估，再导出报告。报告不会虚构缺失数据。',
-    readyToSend: '可发送',
-    latestFull: '最近一次完整评估',
-    cpuPeak: 'CPU 峰值温度',
-    gpuPeak: 'GPU 峰值温度',
-    cpuPowerPeak: 'CPU 峰值功耗',
-    gpuPowerPeak: 'GPU 峰值功耗',
-    impact: 'PulseGuard 影响',
-    serviceCpu: '服务 CPU',
-    serviceRam: '服务 RAM',
-    serviceNote: '由服务本身测得；不包含 Chromium 窗口。',
-    batteryMeasured: '如果电池提供数据，则显示电量、循环次数与估算健康度。',
-    batteryUnavailable: '不适用或系统未暴露。',
-    diskMeasured: '对本地卷进行真实读写。',
-    diskUnavailable: '没有可用于基准测试的卷。',
-    cpuMeasured: '当存在传感器时，进行短负载与持续负载并记录真实遥测。',
-    gpuMeasured: '使用 WebGL 2 进行渲染，在系统允许时记录真实 FPS、温度与功耗。',
-    memoryMeasured: '用户可见的持续内存活动。',
+    fetchError: 'æ— æ³•è¯»å–',
+    quickDone: 'å¿«é€Ÿè¯Šæ–­å·²å®Œæˆ',
+    quickFailed: 'æ— æ³•å®Œæˆæ‰€æœ‰æµ‹è¯•',
+    fullDone: 'å®Œæ•´è¯„ä¼°å·²å®Œæˆ',
+    fullFailed: 'å®Œæ•´è¯„ä¼°æœªèƒ½å®Œæˆ',
+    notExported: 'å°šæœªå¯¼å‡ºæµ‹è¯•æŠ¥å‘Šã€‚',
+    ready: 'å‡†å¤‡è¯„ä¼°',
+    evalCpu: 'æ­£åœ¨æµ‹è¯• CPU...',
+    evalMemory: 'æ­£åœ¨æµ‹è¯•å†…å­˜...',
+    evalGpu: 'æ­£åœ¨æµ‹è¯• GPU...',
+    preparingFull: 'æ­£åœ¨å‡†å¤‡å®Œæ•´è¯„ä¼°ã€‚è®¾å¤‡å¯èƒ½ä¼šå˜æ…¢ã€‚',
+    stressingAll: 'æ­£åœ¨åŒæ—¶åŽ‹æµ‹ CPUã€GPUã€å†…å­˜å’Œç£ç›˜...',
+    concurrentLoad: 'æ­£åœ¨æ–½åŠ å¹¶å‘è´Ÿè½½ã€‚è®¾å¤‡åœ¨è¿‡ç¨‹ä¸­å¯èƒ½ä¼šå˜æ…¢ã€‚',
+    consolidating: 'æ­£åœ¨æ±‡æ€»ç»“æžœå¹¶è®¡ç®—æœ€ç»ˆå¹³å‡å€¼...',
+    reportFailed: 'æ— æ³•å¯¼å‡ºæŠ¥å‘Š',
+    reportReady: 'æŠ¥å‘Šå·²å¯¼å‡ºï¼š{filename}ã€‚æµ‹è¯•äººå‘˜çŽ°åœ¨å¯ä»¥å‘é€ç»™åˆ†æžå›¢é˜Ÿã€‚',
+    quickNote: 'åœ¨å†…ç½®æµè§ˆå™¨ä¸­æ‰§è¡Œçš„å¿«é€Ÿå¯¹æ¯”æµ‹è¯•ã€‚',
+    fullNote: 'å®Œæ•´è¯„ä¼°å·²å®Œæˆï¼Œæ²¡æœ‰é¢å¤–å¼‚å¸¸ã€‚',
+    cpuTimeout: 'æŒç»­ CPU æµ‹è¯•æœªèƒ½æŒ‰æ—¶ç»“æŸï¼Œå·²å‡ºäºŽä¿æŠ¤ç›®çš„åœæ­¢ã€‚',
+    cpuCouldNotRun: 'æ— æ³•æ‰§è¡ŒæŒç»­ CPU æµ‹è¯•ã€‚',
+    fullNoDisk: 'æ²¡æœ‰å¯ç”¨äºŽç£ç›˜åŸºå‡†æµ‹è¯•çš„å·ã€‚',
+    fullNoCpuTemp: 'æ²¡æœ‰å¯ç”¨äºŽæŒç»­æµ‹è¯•çš„è¿‘æœŸçœŸå®ž CPU æ¸©åº¦ã€‚',
+    batteryProtected: 'æµè§ˆå™¨ä¿æŠ¤çš„ GPU',
+    heroEyebrow: 'PC Â· æ‰‹æœº Â· å¹³æ¿',
+    heroTitle: 'è®¾å¤‡æ€§èƒ½',
+    heroDesc: 'æ­¤é¢æ¿ä¼šåŒºåˆ†çœŸå®žæµ‹é‡ã€éƒ¨åˆ†è¦†ç›–ä»¥åŠç³»ç»Ÿæœªæš´éœ²çš„éƒ¨åˆ†ã€‚å®Œæ•´è¯„ä¼°ä¼šå¯¹è®¾å¤‡æ–½åŠ çœŸå®žè´Ÿè½½ï¼Œä»¥èŽ·å¾—æ›´å¯é çš„å¯¹æ¯”ç»“æžœã€‚',
+    currentIndex: 'å½“å‰æŒ‡æ•°',
+    runningEyebrow: 'è¯„ä¼°è¿›è¡Œä¸­',
+    runningTitle: 'å¤šä¸ªç»„ä»¶æ­£åœ¨åŒæ—¶å—åŽ‹',
+    machineSlow: 'è®¾å¤‡å¯èƒ½ä¼šå˜æ…¢',
+    important: 'é‡è¦',
+    importantDesc: 'åœ¨æ­¤è¿‡ç¨‹ä¸­ï¼Œè®¾å¤‡å“åº”å¯èƒ½ä¼šå˜æ…¢ï¼Œé£Žæ‰‡ä¹Ÿå¯èƒ½å‡é€Ÿã€‚è€—æ—¶å–å†³äºŽç¡¬ä»¶ã€ç£ç›˜å’Œä¼ æ„Ÿå™¨å¯ç”¨æ€§ã€‚',
+    noThermalSensor: 'æ— æ¸©åº¦ä¼ æ„Ÿå™¨',
+    loading: 'åŠ è½½ä¸­',
+    diskActive: 'è¿è¡Œä¸­',
+    diskOk: 'å®Œæˆ',
+    diskBusy: 'çœŸå®žè¯»å†™è¿›è¡Œä¸­',
+    diskDone: 'åŸºå‡†ç»“æžœå·²æ±‡æ€»',
+    verify: 'éªŒè¯å†…å®¹',
+    measured: 'å·²æµ‹é‡',
+    limited: 'å—é™',
+    unavailable: 'ä¸å¯ç”¨',
+    profile: 'æ£€æµ‹åˆ°çš„é…ç½®',
+    logicalThreads: 'é€»è¾‘çº¿ç¨‹',
+    visibleMemory: 'å¯è§å†…å­˜',
+    renderer: 'æ¸²æŸ“å™¨',
+    batteryStorage: 'ç”µæ± ä¸Žå­˜å‚¨',
+    batteryCurrent: 'å½“å‰ç”µæ± ',
+    batteryMissing: 'ä¸å­˜åœ¨æˆ–æœªæš´éœ²',
+    pluggedIn: 'å·²æŽ¥é€šç”µæº',
+    discharging: 'æ”¾ç”µä¸­',
+    noReading: 'æ— å¯ç”¨è¯»æ•°',
+    cycles: 'å¾ªçŽ¯',
+    storageUsed: 'å·²ç”¨å­˜å‚¨',
+    restricted: 'å—é™',
+    browserNoCapacity: 'æµè§ˆå™¨æœªæš´éœ²å®¹é‡ä¿¡æ¯',
+    testsAvailable: 'å¯ç”¨æµ‹è¯•',
+    testsDesc: 'å¿«é€Ÿè¯Šæ–­ç”¨äºŽæœ¬åœ°å¯¹æ¯”ï¼›å®Œæ•´è¯„ä¼°åˆ™èƒ½ä»¥æ›´é«˜è¦†ç›–çŽ‡æ•èŽ·æ€§èƒ½ã€ä¼ æ„Ÿå™¨ä¸Žå­˜å‚¨è¡¨çŽ°ã€‚',
+    quickTest: 'å¿«é€Ÿè¯Šæ–­',
+    fullTest: 'å®Œæ•´è®¾å¤‡è¯„ä¼°',
+    fullNoteUi: 'å®Œæ•´è¯„ä¼°ä¼šå¯åŠ¨å¹¶å‘è´Ÿè½½ï¼Œè®¾å¤‡åœ¨æ•°ç§’å†…å¯èƒ½æ˜Žæ˜¾å˜é‡ã€‚',
+    mode: 'æ¨¡å¼',
+    full: 'å®Œæ•´',
+    quick: 'å¿«é€Ÿ',
+    coverage: 'è¦†ç›–çŽ‡',
+    operationsPerSec: 'æ¬¡æ“ä½œ/ç§’',
+    testFps: 'æµ‹è¯• FPS',
+    loopsPerSec: 'è½®æ¬¡/ç§’',
+    readWrite: 'è¯»å–/å†™å…¥',
+    estimatedHealth: 'ä¼°ç®—å¥åº·åº¦',
+    averageTrend: 'å¹³å‡å€¼ä¸Žè¶‹åŠ¿',
+    storedAverage: 'å·²ä¿å­˜å¹³å‡å€¼',
+    localTests: 'æœ¬åœ°æµ‹è¯•',
+    vsBaseline: 'ç›¸å¯¹åŸºçº¿',
+    lastFull: 'ä¸Šæ¬¡å®Œæ•´è¯„ä¼°',
+    comparativeNote: 'å¯¹äºŽå¯¹æ¯”æ•°æ®åº“è€Œè¨€ï¼Œæœ€æœ‰ä»·å€¼çš„æ ·æœ¬æ˜¯æœ€è¿‘ä¸€æ¬¡å®Œæ•´è¯„ä¼°ï¼Œå› ä¸ºå®ƒèƒ½æ¸…æ¥šè¯´æ˜Žå“ªäº›éƒ¨åˆ†å·²è¢«éªŒè¯ä»¥åŠè¦†ç›–çŽ‡å¦‚ä½•ã€‚',
+    reportTitle: 'æµ‹è¯•æŠ¥å‘Š',
+    reportDesc: 'å¯¼å‡ºè®¾å¤‡çŠ¶æ€ä»¥åŠæœ€è¿‘ä¸€æ¬¡æœ¬åœ°è¯„ä¼°ã€‚è¿™æ ·æ•°æ®åº“å°±èƒ½åŒºåˆ†æ€§èƒ½ã€å¯ç”¨ä¼ æ„Ÿå™¨å’Œç³»ç»Ÿé™åˆ¶ã€‚',
+    generating: 'æ­£åœ¨ç”ŸæˆæŠ¥å‘Š...',
+    exportFull: 'å¯¼å‡ºå®Œæ•´æŠ¥å‘Š',
+    recommend: 'å»ºè®®å…ˆæ‰§è¡Œå®Œæ•´è¯„ä¼°ï¼Œå†å¯¼å‡ºæŠ¥å‘Šã€‚æŠ¥å‘Šä¸ä¼šè™šæž„ç¼ºå¤±æ•°æ®ã€‚',
+    readyToSend: 'å¯å‘é€',
+    latestFull: 'æœ€è¿‘ä¸€æ¬¡å®Œæ•´è¯„ä¼°',
+    cpuPeak: 'CPU å³°å€¼æ¸©åº¦',
+    gpuPeak: 'GPU å³°å€¼æ¸©åº¦',
+    cpuPowerPeak: 'CPU å³°å€¼åŠŸè€—',
+    gpuPowerPeak: 'GPU å³°å€¼åŠŸè€—',
+    impact: 'FixTemp å½±å“',
+    serviceCpu: 'æœåŠ¡ CPU',
+    serviceRam: 'æœåŠ¡ RAM',
+    serviceNote: 'ç”±æœåŠ¡æœ¬èº«æµ‹å¾—ï¼›ä¸åŒ…å« Chromium çª—å£ã€‚',
+    batteryMeasured: 'å¦‚æžœç”µæ± æä¾›æ•°æ®ï¼Œåˆ™æ˜¾ç¤ºç”µé‡ã€å¾ªçŽ¯æ¬¡æ•°ä¸Žä¼°ç®—å¥åº·åº¦ã€‚',
+    batteryUnavailable: 'ä¸é€‚ç”¨æˆ–ç³»ç»Ÿæœªæš´éœ²ã€‚',
+    diskMeasured: 'å¯¹æœ¬åœ°å·è¿›è¡ŒçœŸå®žè¯»å†™ã€‚',
+    diskUnavailable: 'æ²¡æœ‰å¯ç”¨äºŽåŸºå‡†æµ‹è¯•çš„å·ã€‚',
+    cpuMeasured: 'å½“å­˜åœ¨ä¼ æ„Ÿå™¨æ—¶ï¼Œè¿›è¡ŒçŸ­è´Ÿè½½ä¸ŽæŒç»­è´Ÿè½½å¹¶è®°å½•çœŸå®žé¥æµ‹ã€‚',
+    gpuMeasured: 'ä½¿ç”¨ WebGL 2 è¿›è¡Œæ¸²æŸ“ï¼Œåœ¨ç³»ç»Ÿå…è®¸æ—¶è®°å½•çœŸå®ž FPSã€æ¸©åº¦ä¸ŽåŠŸè€—ã€‚',
+    memoryMeasured: 'ç”¨æˆ·å¯è§çš„æŒç»­å†…å­˜æ´»åŠ¨ã€‚',
     browserQuickName: 'device',
-    testRequiredNote: '完成完整评估后即可解锁报告并参与排名。',
-    rankSending: '正在提交到全球排名…',
-    rankSent: '已加入排名！',
-    rankFailed: '无法提交到排名。',
-    rankRetry: '重新提交',
-    rankPosition: '排名',
-    rankOf: '共 {total} 台设备',
-    rankPercentile: '超过了',
-    rankOfDevices: '的设备',
-    scoreLabel: '您的得分',
-    viewRanking: '查看全球排名'
+    testRequiredNote: 'å®Œæˆå®Œæ•´è¯„ä¼°åŽå³å¯è§£é”æŠ¥å‘Šå¹¶å‚ä¸ŽæŽ’åã€‚',
+    rankSending: 'æ­£åœ¨æäº¤åˆ°å…¨çƒæŽ’åâ€¦',
+    rankSent: 'å·²åŠ å…¥æŽ’åï¼',
+    rankFailed: 'æ— æ³•æäº¤åˆ°æŽ’åã€‚',
+    rankRetry: 'é‡æ–°æäº¤',
+    rankPosition: 'æŽ’å',
+    rankOf: 'å…± {total} å°è®¾å¤‡',
+    rankPercentile: 'è¶…è¿‡äº†',
+    rankOfDevices: 'çš„è®¾å¤‡',
+    scoreLabel: 'æ‚¨çš„å¾—åˆ†',
+    viewRanking: 'æŸ¥çœ‹å…¨çƒæŽ’å'
   }
 } as const
 
@@ -457,8 +457,8 @@ async function gpuBenchmark(durationMs = 1800, intensive = false): Promise<numbe
     gl.compileShader(vertex)
 
     const fragment = gl.createShader(gl.FRAGMENT_SHADER)!
-    // Intensive: 224 iteraciones a 1280×720 (mismo shader que GpuStressEngine — estresa la GPU real)
-    // Quick: 90 iteraciones a 640×360 (medición comparativa ligera)
+    // Intensive: 224 iteraciones a 1280Ã—720 (mismo shader que GpuStressEngine â€” estresa la GPU real)
+    // Quick: 90 iteraciones a 640Ã—360 (mediciÃ³n comparativa ligera)
     const iters = intensive ? 224 : 90
     const w = intensive ? 1280 : 640
     const h = intensive ? 720 : 360
@@ -503,9 +503,9 @@ async function gpuBenchmark(durationMs = 1800, intensive = false): Promise<numbe
 }
 
 async function memoryBenchmark() {
-  // Buffer 128 MB — supera la caché L3 de cualquier CPU actual.
-  // Acceso secuencial completo (i++) en lugar de stride-32, lo que obliga a acceder a RAM física.
-  // Métrica de salida: MB/s de ancho de banda de lectura+escritura real.
+  // Buffer 128 MB â€” supera la cachÃ© L3 de cualquier CPU actual.
+  // Acceso secuencial completo (i++) en lugar de stride-32, lo que obliga a acceder a RAM fÃ­sica.
+  // MÃ©trica de salida: MB/s de ancho de banda de lectura+escritura real.
   const source = 'onmessage=e=>{const dur=e.data;const size=32*1024*1024;const block=new Uint32Array(size);const bytesPerPass=size*4;const start=performance.now();let passes=0,checksum=0;while(performance.now()-start<dur){for(let i=0;i<size;i++){block[i]=(block[i]^i)+passes}for(let i=0;i<size;i++){checksum^=block[i]}passes++}const elapsed=performance.now()-start;const mbps=Math.round(passes*bytesPerPass*2/1024/1024/(elapsed/1000));postMessage({mbps,elapsed,checksum})}'
   const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }))
   try {
@@ -540,7 +540,7 @@ function weightedAverage(entries: Array<{ value: number | null; weight: number }
 
 const scoreFromCpu = (cpuScore: number) => clamp(Math.round(Math.log10(Math.max(1, cpuScore)) * 15), 0, 100)
 const scoreFromGpu = (gpuFps: number) => clamp(Math.round(gpuFps / 1.3), 0, 100)
-// memoryScore ahora es MB/s de ancho de banda real: DDR3≈8000, DDR4-2666≈18000, DDR5≈35000
+// memoryScore ahora es MB/s de ancho de banda real: DDR3â‰ˆ8000, DDR4-2666â‰ˆ18000, DDR5â‰ˆ35000
 const scoreFromMemory = (memoryScore: number) => clamp(Math.round(memoryScore / 400), 0, 100)
 const scoreFromStorage = (result: StorageBenchmarkResult | null) => result ? clamp(Math.round(Math.log10(Math.max(1, (result.readMbps + result.writeMbps) / 2)) * 35), 0, 100) : null
 const scoreFromBattery = (healthPercent: number | null) => healthPercent === null ? null : clamp(Math.round(healthPercent), 0, 100)
@@ -572,7 +572,7 @@ async function runStressCapture(baseline: Metrics, notes: string[], text: Health
 function saveDiagnostics(history: Diagnostic[], setHistory: (value: Diagnostic[]) => void, entry: Diagnostic) {
   const next = [...history, entry].slice(-20)
   setHistory(next)
-  localStorage.setItem('pulseguard-device-history', JSON.stringify(next))
+  localStorage.setItem('fixtemp-device-history', JSON.stringify(next))
 }
 
 export function DeviceHealth({ data }: { data: Metrics | null }) {
@@ -599,7 +599,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
   const [lastDiagnostic, setLastDiagnostic] = useState<Diagnostic | null>(null)
   const [history, setHistory] = useState<Diagnostic[]>(() => {
     try {
-      const parsed = JSON.parse(localStorage.getItem('pulseguard-device-history') || '[]')
+      const parsed = JSON.parse(localStorage.getItem('fixtemp-device-history') || '[]')
       return Array.isArray(parsed) ? parsed.map(migrateDiagnostic) : []
     } catch {
       return []
@@ -826,7 +826,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
       const blob = await response.blob()
       const disposition = response.headers.get('Content-Disposition') || ''
       const match = disposition.match(/filename="([^"]+)"/)
-      const filename = match ? match[1] : `PulseGuard-${new Date().toISOString().slice(0, 10)}.xlsx`
+      const filename = match ? match[1] : `FixTemp-${new Date().toISOString().slice(0, 10)}.xlsx`
       const href = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = href
@@ -853,7 +853,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
         <h2>{text.heroTitle}</h2>
         <p>{text.heroDesc}</p>
       </div>
-      <div className="health-score"><span>{latest?.score ?? '—'}</span><small>{text.currentIndex}</small></div>
+      <div className="health-score"><span>{latest?.score ?? 'â€”'}</span><small>{text.currentIndex}</small></div>
     </section>
 
     {evaluation?.active ? <section className="health-evaluation-live">
@@ -871,8 +871,8 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
         <span><b>{text.important}</b>{text.importantDesc}</span>
       </div>
       <div className="health-live-grid">
-        <div><span>CPU</span><b>{data?.cpu.load ?? 0}%</b><small>{data?.cpu.temperature !== null && data?.cpu.temperature !== undefined ? `${data.cpu.temperature}°C` : text.noThermalSensor}</small></div>
-        <div><span>GPU</span><b>{data?.gpu.load ?? 0}%</b><small>{data?.gpu.temperature !== null && data?.gpu.temperature !== undefined ? `${data.gpu.temperature}°C` : text.noThermalSensor}</small></div>
+        <div><span>CPU</span><b>{data?.cpu.load ?? 0}%</b><small>{data?.cpu.temperature !== null && data?.cpu.temperature !== undefined ? `${data.cpu.temperature}Â°C` : text.noThermalSensor}</small></div>
+        <div><span>GPU</span><b>{data?.gpu.load ?? 0}%</b><small>{data?.gpu.temperature !== null && data?.gpu.temperature !== undefined ? `${data.gpu.temperature}Â°C` : text.noThermalSensor}</small></div>
         <div><span>RAM</span><b>{data?.memory.load ?? 0}%</b><small>{data ? `${data.memory.used}/${data.memory.total} GB` : text.loading}</small></div>
         <div><span>DISK</span><b>{evaluation.diskActive ? text.diskActive : text.diskOk}</b><small>{evaluation.diskActive ? text.diskBusy : text.diskDone}</small></div>
       </div>
@@ -892,7 +892,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
       <section className="health-card profile-card">
         <div className="hardware-title"><MonitorSmartphone size={20}/><h3>{text.profile}</h3></div>
         <div className="profile-list">
-          <div><Cpu/><span><b>{profile.cores || '—'}</b> {text.logicalThreads}</span></div>
+          <div><Cpu/><span><b>{profile.cores || 'â€”'}</b> {text.logicalThreads}</span></div>
           <div><MemoryStick/><span><b>{profile.memoryGb ? `${profile.memoryGb} GB` : text.restricted}</b> {text.visibleMemory}</span></div>
           <div><Smartphone/><span><b>{profile.platform}</b> {profile.screen}</span></div>
           <div><Zap/><span><b>{profile.gpu}</b> {text.renderer}</span></div>
@@ -905,7 +905,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
           <div>
             <span>{text.batteryCurrent} <b>{displayedBattery ? `${displayedBattery.level}%` : text.batteryMissing}</b></span>
             <i><em style={{ width: `${displayedBattery?.level || 0}%` }}/></i>
-            <small>{displayedBattery ? displayedBattery.charging ? text.pluggedIn : text.discharging : text.noReading}{data?.battery?.cycleCount !== null && data?.battery?.cycleCount !== undefined ? ` · ${data.battery.cycleCount} ${text.cycles}` : ''}</small>
+            <small>{displayedBattery ? displayedBattery.charging ? text.pluggedIn : text.discharging : text.noReading}{data?.battery?.cycleCount !== null && data?.battery?.cycleCount !== undefined ? ` Â· ${data.battery.cycleCount} ${text.cycles}` : ''}</small>
           </div>
           <div>
             <span>{text.storageUsed} <b>{storagePercent !== null ? `${storagePercent}%` : text.restricted}</b></span>
@@ -924,20 +924,20 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
         {latest && <div className="result-grid extended-grid">
           <div><span>{text.mode}</span><b>{latest.mode === 'full' ? text.full : text.quick}</b><small>{latest.coverage}% {text.coverage}</small></div>
           <div><span>CPU</span><b>{latest.cpuScore.toLocaleString()}</b><small>{text.operationsPerSec}</small></div>
-          <div><span>GPU</span><b>{latest.gpuFps !== null ? latest.gpuFps : '—'}</b><small>{text.testFps}</small></div>
-          <div><span>RAM</span><b>{latest.memoryScore !== null ? latest.memoryScore : '—'}</b><small>{text.loopsPerSec}</small></div>
-          <div><span>DISK</span><b>{latest.storageReadMbps !== null ? `${latest.storageReadMbps}/${latest.storageWriteMbps} MB/s` : '—'}</b><small>{text.readWrite}</small></div>
-          <div><span>BATTERY</span><b>{latest.batteryHealthPercent !== null ? `${latest.batteryHealthPercent}%` : '—'}</b><small>{text.estimatedHealth}</small></div>
+          <div><span>GPU</span><b>{latest.gpuFps !== null ? latest.gpuFps : 'â€”'}</b><small>{text.testFps}</small></div>
+          <div><span>RAM</span><b>{latest.memoryScore !== null ? latest.memoryScore : 'â€”'}</b><small>{text.loopsPerSec}</small></div>
+          <div><span>DISK</span><b>{latest.storageReadMbps !== null ? `${latest.storageReadMbps}/${latest.storageWriteMbps} MB/s` : 'â€”'}</b><small>{text.readWrite}</small></div>
+          <div><span>BATTERY</span><b>{latest.batteryHealthPercent !== null ? `${latest.batteryHealthPercent}%` : 'â€”'}</b><small>{text.estimatedHealth}</small></div>
         </div>}
       </section>
 
       <section className="health-card">
         <div className="hardware-title"><CheckCircle2 size={20}/><h3>{text.averageTrend}</h3></div>
         <div className="impact-values">
-          <div><b>{averageScore ?? '—'}</b><span>{text.storedAverage}</span></div>
+          <div><b>{averageScore ?? 'â€”'}</b><span>{text.storedAverage}</span></div>
           <div><b>{history.length}</b><span>{text.localTests}</span></div>
-          <div><b>{retention ?? '—'}{retention !== null ? '%' : ''}</b><span>{text.vsBaseline}</span></div>
-          <div><b>{lastFull?.coverage ?? '—'}{lastFull ? '%' : ''}</b><span>{text.lastFull}</span></div>
+          <div><b>{retention ?? 'â€”'}{retention !== null ? '%' : ''}</b><span>{text.vsBaseline}</span></div>
+          <div><b>{lastFull?.coverage ?? 'â€”'}{lastFull ? '%' : ''}</b><span>{text.lastFull}</span></div>
         </div>
         <p className="sensor-note">{text.comparativeNote}</p>
       </section>
@@ -966,7 +966,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
                 <Trophy size={14} style={{ color: 'var(--accent)' }}/>
                 <span>
                   {text.rankPosition} <b style={{ color: 'var(--accent)' }}>#{rankingResult.rank}</b> {text.rankOf.replace('{total}', String(rankingResult.total))}
-                  {' · '}{text.rankPercentile} <b style={{ color: 'var(--accent2)' }}>{rankingResult.percentile}%</b> {text.rankOfDevices}
+                  {' Â· '}{text.rankPercentile} <b style={{ color: 'var(--accent2)' }}>{rankingResult.percentile}%</b> {text.rankOfDevices}
                 </span>
               </div>
             )}
@@ -1001,10 +1001,10 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
       {lastFull && <section className="health-card">
         <div className="hardware-title"><Thermometer size={20}/><h3>{text.latestFull}</h3></div>
         <div className="impact-values">
-          <div><b>{lastFull.cpuPeakTemp !== null ? `${lastFull.cpuPeakTemp}°C` : '—'}</b><span>{text.cpuPeak}</span></div>
-          <div><b>{lastFull.gpuPeakTemp !== null ? `${lastFull.gpuPeakTemp}°C` : '—'}</b><span>{text.gpuPeak}</span></div>
-          <div><b>{lastFull.cpuPeakPower !== null ? `${lastFull.cpuPeakPower}W` : '—'}</b><span>{text.cpuPowerPeak}</span></div>
-          <div><b>{lastFull.gpuPeakPower !== null ? `${lastFull.gpuPeakPower}W` : '—'}</b><span>{text.gpuPowerPeak}</span></div>
+          <div><b>{lastFull.cpuPeakTemp !== null ? `${lastFull.cpuPeakTemp}Â°C` : 'â€”'}</b><span>{text.cpuPeak}</span></div>
+          <div><b>{lastFull.gpuPeakTemp !== null ? `${lastFull.gpuPeakTemp}Â°C` : 'â€”'}</b><span>{text.gpuPeak}</span></div>
+          <div><b>{lastFull.cpuPeakPower !== null ? `${lastFull.cpuPeakPower}W` : 'â€”'}</b><span>{text.cpuPowerPeak}</span></div>
+          <div><b>{lastFull.gpuPeakPower !== null ? `${lastFull.gpuPeakPower}W` : 'â€”'}</b><span>{text.gpuPowerPeak}</span></div>
         </div>
       </section>}
 

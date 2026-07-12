@@ -5,9 +5,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$taskName = 'PulseGuard Sensors'
-$startupTaskName = 'PulseGuard Startup'
-$dataDirectory = Join-Path $env:ProgramData 'PulseGuard'
+$taskName = 'FixTemp Sensors'
+$startupTaskName = 'FixTemp Startup'
+$legacyTaskName = 'PulseGuard Sensors'
+$legacyStartupTaskName = 'PulseGuard Startup'
+$dataDirectory = Join-Path $env:ProgramData 'FixTemp'
 $snapshot = Join-Path $dataDirectory 'sensors.json'
 $logFile = Join-Path $dataDirectory 'sensor-install.log'
 
@@ -21,6 +23,10 @@ if ($Uninstall) {
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
     Stop-ScheduledTask -TaskName $startupTaskName -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $startupTaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Stop-ScheduledTask -TaskName $legacyTaskName -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
+    Stop-ScheduledTask -TaskName $legacyStartupTaskName -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $legacyStartupTaskName -Confirm:$false -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $dataDirectory -Recurse -Force -ErrorAction SilentlyContinue
     exit 0
 }
@@ -29,16 +35,20 @@ try {
 Write-InstallLog 'Iniciando instalacion del lector de sensores.'
 
 $sensorDirectory = Join-Path $InstallDir 'resources\sensor-helper'
-$sensorExecutable = Join-Path $sensorDirectory 'PulseGuard.Sensors.exe'
+$sensorExecutable = Join-Path $sensorDirectory 'FixTemp.Sensors.exe'
 $driverInstaller = Join-Path $sensorDirectory 'PawnIO_setup.exe'
-if (!(Test-Path -LiteralPath $sensorExecutable)) { throw 'No se encontro PulseGuard.Sensors.exe' }
+if (!(Test-Path -LiteralPath $sensorExecutable)) { throw 'No se encontro FixTemp.Sensors.exe' }
 if (!(Test-Path -LiteralPath $driverInstaller)) { throw 'No se encontro PawnIO_setup.exe' }
 
 New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
+Stop-ScheduledTask -TaskName $legacyTaskName -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName $legacyTaskName -Confirm:$false -ErrorAction SilentlyContinue
+Stop-ScheduledTask -TaskName $legacyStartupTaskName -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName $legacyStartupTaskName -Confirm:$false -ErrorAction SilentlyContinue
 $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
 $pawnInstalled = $null -ne $pawnService -or (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO')
 if (!$pawnInstalled) {
-    $driver = Start-Process -FilePath $driverInstaller -ArgumentList '-install' -Wait -PassThru
+    $driver = Start-Process -FilePath $driverInstaller -ArgumentList '/S', '-install' -Wait -PassThru -WindowStyle Hidden
     if ($driver.ExitCode -ne 0) { throw "PawnIO termino con codigo $($driver.ExitCode)" }
     Start-Sleep -Seconds 2
     $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
@@ -62,19 +72,19 @@ $action = New-ScheduledTaskAction -Execute $sensorExecutable -Argument "--snapsh
 $trigger = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
 $settings = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero) -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description 'Lectura local de sensores CPU para PulseGuard' -Force | Out-Null
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description 'Lectura local de sensores CPU para FixTemp' -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
 
 Unregister-ScheduledTask -TaskName $startupTaskName -Confirm:$false -ErrorAction SilentlyContinue
 if ($EnableAppStartup) {
-    $appExecutable = Join-Path $InstallDir 'PulseGuard.exe'
-    if (!(Test-Path -LiteralPath $appExecutable)) { throw 'No se encontro PulseGuard.exe para configurar el inicio automatico.' }
+    $appExecutable = Join-Path $InstallDir 'FixTemp.exe'
+    if (!(Test-Path -LiteralPath $appExecutable)) { throw 'No se encontro FixTemp.exe para configurar el inicio automatico.' }
     $interactiveUser = [Security.Principal.WindowsIdentity]::GetCurrent().Name
     $startupAction = New-ScheduledTaskAction -Execute $appExecutable
     $startupTrigger = New-ScheduledTaskTrigger -AtLogOn -User $interactiveUser
     $startupPrincipal = New-ScheduledTaskPrincipal -UserId $interactiveUser -LogonType Interactive -RunLevel Highest
     $startupSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
-    Register-ScheduledTask -TaskName $startupTaskName -Action $startupAction -Trigger $startupTrigger -Principal $startupPrincipal -Settings $startupSettings -Description 'Inicia PulseGuard al ingresar a Windows' -Force | Out-Null
+    Register-ScheduledTask -TaskName $startupTaskName -Action $startupAction -Trigger $startupTrigger -Principal $startupPrincipal -Settings $startupSettings -Description 'Inicia FixTemp al ingresar a Windows' -Force | Out-Null
     Write-InstallLog "Inicio automatico habilitado para $interactiveUser."
 } else {
     Write-InstallLog 'Inicio automatico deshabilitado por el usuario.'

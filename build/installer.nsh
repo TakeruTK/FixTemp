@@ -1,4 +1,4 @@
-!include "nsDialogs.nsh"
+﻿!include "nsDialogs.nsh"
 
 !ifndef BUILD_UNINSTALLER
 
@@ -19,9 +19,9 @@ Function StartupOptionsCreate
   ${If} $0 == error
     Abort
   ${EndIf}
-  ${NSD_CreateLabel} 0 0 100% 28u "Puedes iniciar PulseGuard automáticamente al ingresar a Windows o abrirlo manualmente desde el menú Inicio."
+  ${NSD_CreateLabel} 0 0 100% 28u "Puedes iniciar FixTemp automÃ¡ticamente al ingresar a Windows o abrirlo manualmente desde el menÃº Inicio."
   Pop $0
-  ${NSD_CreateCheckbox} 0 40u 100% 14u "Iniciar PulseGuard al iniciar sesión en Windows"
+  ${NSD_CreateCheckbox} 0 40u 100% 14u "Iniciar FixTemp al iniciar sesiÃ³n en Windows"
   Pop $StartWithWindowsCheckbox
   ${If} $StartWithWindows == "1"
     ${NSD_Check} $StartWithWindowsCheckbox
@@ -40,12 +40,14 @@ FunctionEnd
 
 !macro customInstall
   ${If} $StartWithWindows == "1"
-    ExecWait '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup' $0
+    nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup'
+    Pop $0
   ${Else}
-    ExecWait '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR"' $0
+    nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR"'
+    Pop $0
   ${EndIf}
   ${If} $0 != 0
-    MessageBox MB_ICONSTOP "PulseGuard no pudo activar el lector real de temperatura. La instalacion se cancelara para evitar mostrar datos incompletos."
+    MessageBox MB_ICONSTOP "FixTemp no pudo activar el lector real de temperatura. La instalacion se cancelara para evitar mostrar datos incompletos."
     Abort
   ${EndIf}
 !macroend
@@ -53,5 +55,6 @@ FunctionEnd
 !endif
 
 !macro customUnInstall
-  ExecWait '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -Uninstall' $0
+  nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -Uninstall'
+  Pop $0
 !macroend
