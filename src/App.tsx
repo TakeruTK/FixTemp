@@ -84,9 +84,9 @@ function AboutPanel() {
     <div className="about-hero">
       <Info size={24}/>
       <div>
-        <p className="section-label">FIXPC</p>
+        <p className="section-label">FIXTEMP</p>
         <h2>FixTemp</h2>
-        <p>FixPC es el proyecto de herramientas para revisar, mantener y entender mejor el estado real de un equipo. FixTemp forma parte de ese proyecto y se enfoca en monitorear sensores, temperatura, carga, hardware y estabilidad desde una interfaz local.</p>
+        <p>FixTemp es una herramienta para revisar, mantener y entender mejor el estado real de un equipo. Se enfoca en monitorear sensores, temperatura, carga, hardware y estabilidad desde una interfaz local.</p>
       </div>
     </div>
     <div className="about-grid">

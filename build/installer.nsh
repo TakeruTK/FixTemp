@@ -6,6 +6,12 @@ Var StartWithWindowsCheckbox
 Var StartWithWindows
 
 !macro customInit
+  nsExec::ExecToStack 'taskkill /IM FixTemp.exe /F'
+  Pop $0
+  Pop $1
+  nsExec::ExecToStack 'taskkill /IM PulseGuard.exe /F'
+  Pop $0
+  Pop $1
   StrCpy $StartWithWindows "1"
 !macroend
 
