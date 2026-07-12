@@ -1,4 +1,4 @@
-# PulseGuard
+# FixTemp
 
 ## Novedades 0.6.0
 
@@ -13,7 +13,7 @@ Monitor local de hardware para Windows y Linux, además de una PWA para móviles
 
 ## Abrir la aplicación
 
-Haz doble clic en `INICIAR.bat`. El panel se abrirá en el navegador y el servicio permanecerá activo mientras la ventana de PulseGuard siga abierta.
+Haz doble clic en `INICIAR.bat`. El panel se abrirá en el navegador y el servicio permanecerá activo mientras la ventana de FixTemp siga abierta.
 
 Para desarrollo, con Node.js y pnpm instalados:
 
@@ -30,7 +30,7 @@ La versión de producción se genera con `pnpm build` y se sirve desde `http://1
 pnpm dist:win
 ```
 
-El instalador se crea en la carpeta `release`. Incluye una opción para iniciar PulseGuard con Windows y registra el desinstalador en Aplicaciones instaladas/Panel de control. También incorpora la aplicación, el lector SYSTEM y el controlador firmado PawnIO; el equipo de destino no necesita instalar Node.js ni .NET.
+El instalador se crea en la carpeta `release`. Incluye una opción para iniciar FixTemp con Windows y registra el desinstalador en Aplicaciones instaladas/Panel de control. También incorpora la aplicación, el lector SYSTEM y el controlador firmado PawnIO; el equipo de destino no necesita instalar Node.js ni .NET.
 
 ## Generar la beta de Linux
 

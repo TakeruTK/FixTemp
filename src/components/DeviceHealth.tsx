@@ -145,7 +145,7 @@ const copy = {
     gpuPeak: 'pico GPU',
     cpuPowerPeak: 'CPU pico',
     gpuPowerPeak: 'GPU pico',
-    impact: 'Impacto de PulseGuard',
+    impact: 'Impacto de FixTemp',
     serviceCpu: 'CPU del servicio',
     serviceRam: 'RAM del servicio',
     serviceNote: 'Medido por el propio servicio; no incluye la ventana Chromium.',
@@ -257,7 +257,7 @@ const copy = {
     gpuPeak: 'GPU peak',
     cpuPowerPeak: 'CPU power peak',
     gpuPowerPeak: 'GPU power peak',
-    impact: 'PulseGuard impact',
+    impact: 'FixTemp impact',
     serviceCpu: 'service CPU',
     serviceRam: 'service RAM',
     serviceNote: 'Measured by the service itself; this does not include the Chromium window.',
@@ -369,7 +369,7 @@ const copy = {
     gpuPeak: 'GPU 峰值温度',
     cpuPowerPeak: 'CPU 峰值功耗',
     gpuPowerPeak: 'GPU 峰值功耗',
-    impact: 'PulseGuard 影响',
+    impact: 'FixTemp 影响',
     serviceCpu: '服务 CPU',
     serviceRam: '服务 RAM',
     serviceNote: '由服务本身测得；不包含 Chromium 窗口。',
@@ -826,7 +826,7 @@ export function DeviceHealth({ data }: { data: Metrics | null }) {
       const blob = await response.blob()
       const disposition = response.headers.get('Content-Disposition') || ''
       const match = disposition.match(/filename="([^"]+)"/)
-      const filename = match ? match[1] : `PulseGuard-${new Date().toISOString().slice(0, 10)}.xlsx`
+      const filename = match ? match[1] : `FixTemp-${new Date().toISOString().slice(0, 10)}.xlsx`
       const href = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = href

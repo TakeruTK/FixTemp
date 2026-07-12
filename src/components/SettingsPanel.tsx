@@ -5,7 +5,7 @@ import { useI18n } from '../i18n'
 const copy = {
   es: {
     eyebrow: 'AJUSTES DEL PROGRAMA',
-    title: 'Preferencias de PulseGuard',
+    title: 'Preferencias de FixTemp',
     description: 'Desde aquí puedes controlar el idioma de toda la interfaz. El cambio se aplica al instante y queda guardado para futuras aperturas del programa.',
     current: 'Idioma actual',
     section: 'IDIOMA DE LA INTERFAZ',
@@ -42,7 +42,7 @@ const copy = {
   },
   en: {
     eyebrow: 'APPLICATION SETTINGS',
-    title: 'PulseGuard preferences',
+    title: 'FixTemp preferences',
     description: 'Here you can control the language of the entire interface. The change is applied instantly and stays saved for future launches.',
     current: 'Current language',
     section: 'INTERFACE LANGUAGE',
@@ -79,7 +79,7 @@ const copy = {
   },
   'zh-CN': {
     eyebrow: '程序设置',
-    title: 'PulseGuard 偏好设置',
+    title: 'FixTemp 偏好设置',
     description: '你可以在这里控制整个界面的语言。切换会立即生效，并会保存到下次打开程序。',
     current: '当前语言',
     section: '界面语言',
@@ -288,7 +288,7 @@ function SensorPanel() {
         section: 'SENSORES AVANZADOS',
         helper: 'Habilita el acceso ampliado a sensores de motherboard para mejorar la lectura de temperatura y ventilador de CPU.',
         direct: 'Lectura directa activa',
-        directDetail: 'PulseGuard ya está usando el lector avanzado.',
+        directDetail: 'FixTemp ya está usando el lector avanzado.',
         limited: 'Lectura limitada',
         limitedDetail: 'El ventilador o la temperatura de CPU pueden seguir sin estar disponibles.',
         install: 'Habilitar sensores de placa',
@@ -302,7 +302,7 @@ function SensorPanel() {
           section: '高级传感器',
           helper: '启用主板扩展传感器访问，以改进 CPU 温度和风扇读数。',
           direct: '直接读数已启用',
-          directDetail: 'PulseGuard 已经在使用高级传感器读取器。',
+          directDetail: 'FixTemp 已经在使用高级传感器读取器。',
           limited: '读数受限',
           limitedDetail: 'CPU 风扇或温度可能仍不可用。',
           install: '启用主板传感器',
@@ -315,7 +315,7 @@ function SensorPanel() {
           section: 'ADVANCED SENSORS',
           helper: 'Enable extended motherboard sensor access to improve CPU temperature and fan readings.',
           direct: 'Direct readout active',
-          directDetail: 'PulseGuard is already using the advanced sensor reader.',
+          directDetail: 'FixTemp is already using the advanced sensor reader.',
           limited: 'Limited readout',
           limitedDetail: 'CPU fan or temperature may still be unavailable.',
           install: 'Enable motherboard sensors',

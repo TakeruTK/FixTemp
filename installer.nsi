@@ -1,21 +1,21 @@
 ; ============================================================
-;  PulseGuard — Instalador NSIS
+;  FixTemp — Instalador NSIS
 ;  Compilar: clic derecho en este archivo → "Compile NSIS Script"
 ;  Requiere: NSIS 3.x  https://nsis.sourceforge.io/
 ; ============================================================
 
-!define APP_NAME      "PulseGuard"
+!define APP_NAME      "FixTemp"
 !define APP_VERSION   "0.6.0"
-!define APP_PUBLISHER "PulseGuard"
-!define APP_EXE       "PulseGuard.exe"
+!define APP_PUBLISHER "FixTemp"
+!define APP_EXE       "FixTemp.exe"
 !define SRC_DIR       "portable-060"
-!define UNINST_KEY    "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PulseGuard"
-!define REG_KEY       "SOFTWARE\PulseGuard"
+!define UNINST_KEY    "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\FixTemp"
+!define REG_KEY       "SOFTWARE\FixTemp"
 
 ; ---- Configuración general ----
 Name                  "${APP_NAME} ${APP_VERSION}"
-OutFile               "PulseGuard-Setup-v${APP_VERSION}.exe"
-InstallDir            "$PROGRAMFILES64\PulseGuard"
+OutFile               "FixTemp-Setup-v${APP_VERSION}.exe"
+InstallDir            "$PROGRAMFILES64\FixTemp"
 InstallDirRegKey HKLM "${REG_KEY}" "Install_Dir"
 RequestExecutionLevel admin
 SetCompressor         /SOLID lzma
@@ -28,7 +28,7 @@ Unicode               True
 !define MUI_UNICON            "pulseguard-icon.ico"
 !define MUI_ABORTWARNING
 !define MUI_FINISHPAGE_RUN    "$INSTDIR\${APP_EXE}"
-!define MUI_FINISHPAGE_RUN_TEXT "Iniciar PulseGuard ahora"
+!define MUI_FINISHPAGE_RUN_TEXT "Iniciar FixTemp ahora"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
@@ -104,5 +104,5 @@ Section "Uninstall"
     DeleteRegKey HKLM "${UNINST_KEY}"
     DeleteRegKey HKLM "${REG_KEY}"
 
-    DetailPrint "PulseGuard desinstalado correctamente."
+    DetailPrint "FixTemp desinstalado correctamente."
 SectionEnd
