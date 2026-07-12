@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowDownToLine, Bell, Info, ListChecks, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
+import { ArrowDownToLine, Bell, BookOpen, Info, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
 import { GpuStressEngine } from './components/GpuStressEngine'
@@ -101,15 +101,43 @@ function AboutPanel() {
         <p>Ayuda a detectar si el equipo esta trabajando normal, si faltan sensores, si hay carga alta o si conviene hacer pruebas antes de mantenimiento, reparacion o comparacion entre equipos.</p>
       </article>
       <article className="about-card about-guide">
-        <ListChecks size={20}/>
-        <h3>Guia rapida de uso</h3>
-        <ol>
-          <li>Abre Resumen para revisar CPU, GPU, RAM, red, discos y procesos en vivo.</li>
-          <li>Si faltan temperatura o ventilador, usa Ajustes para activar los sensores avanzados.</li>
-          <li>En Mi equipo revisa el inventario del PC antes de comparar o reparar.</li>
-          <li>Usa Salud del dispositivo para una evaluacion general y Pruebas de estres solo cuando quieras exigir el equipo.</li>
-          <li>En Actualizaciones busca nuevas versiones y deja que FixTemp descargue el instalador cuando haya una mejora disponible.</li>
-        </ol>
+        <BookOpen size={20}/>
+        <h3>Manual de uso</h3>
+        <div className="manual-grid">
+          <div>
+            <b>1. Primer inicio</b>
+            <p>Instala FixTemp como administrador y espera unos segundos mientras carga sensores, discos, red y procesos. Si Windows pregunta permisos, aceptalos para que el lector pueda acceder al hardware.</p>
+          </div>
+          <div>
+            <b>2. Resumen</b>
+            <p>Usa Resumen para mirar el estado diario del equipo: carga de CPU y GPU, temperatura, reloj, ventilador, RAM, red, almacenamiento y procesos principales.</p>
+          </div>
+          <div>
+            <b>3. Sensores avanzados</b>
+            <p>Si la temperatura o el ventilador aparecen como no disponibles, entra en Ajustes y activa los sensores avanzados. Algunas placas o notebooks pueden ocultar datos aunque el equipo funcione bien.</p>
+          </div>
+          <div>
+            <b>4. Mi equipo</b>
+            <p>Revisa el inventario antes de reparar, vender, comparar o actualizar un PC. Aqui puedes ver procesador, placa, BIOS, RAM, GPU, discos, red, audio y pantallas detectadas.</p>
+          </div>
+          <div>
+            <b>5. Salud del dispositivo</b>
+            <p>Sirve para una lectura general: rendimiento visible, cobertura de sensores, estado de memoria, almacenamiento y datos disponibles. Es una referencia, no un diagnostico medico del hardware.</p>
+          </div>
+          <div>
+            <b>6. Pruebas de estres</b>
+            <p>Usalas solo cuando quieras exigir el equipo. Antes de iniciar, cierra juegos o programas pesados, vigila temperaturas y detiene la prueba si notas apagones, congelamientos o calor excesivo.</p>
+          </div>
+          <div>
+            <b>7. Overlay</b>
+            <p>Activa el overlay cuando quieras ver datos mientras usas otra aplicacion. Puedes elegir que metricas mostrar para no llenar la pantalla con informacion innecesaria.</p>
+          </div>
+          <div>
+            <b>8. Actualizaciones</b>
+            <p>En Actualizaciones puedes buscar nuevas versiones. Cuando haya una mejora, FixTemp descarga el instalador, lo ejecuta y vuelve a abrir el programa al terminar.</p>
+          </div>
+        </div>
+        <p className="manual-note">Consejo: para pruebas en otros equipos, instala una version anterior y luego usa Actualizaciones para confirmar que descarga, instala y vuelve a abrir FixTemp correctamente.</p>
       </article>
     </div>
   </section>

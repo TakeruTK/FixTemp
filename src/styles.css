@@ -61,4 +61,10 @@ button { color:inherit; }
 .about-guide { grid-column:1/-1; min-height:0; }
 .about-guide ol { margin:0; padding-left:18px; color:#819097; font-size:11px; line-height:1.8; }
 .about-guide li { padding-left:4px; margin:4px 0; }
+.manual-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; }
+.manual-grid>div { padding:13px; background:#0c1113; border:1px solid #20282c; }
+.manual-grid b { display:block; margin-bottom:5px; color:#dce5e7; font-size:11px; }
+.manual-grid p,.manual-note { margin:0; color:#819097; font-size:11px; line-height:1.7; }
+.manual-note { margin-top:13px; padding:12px; border:1px solid #27352f; background:#10170f; color:#9fb18b; }
 @media(max-width:760px){.about-grid{grid-template-columns:1fr}.about-hero{padding:20px}.about-page{max-width:none}}
+@media(max-width:760px){.manual-grid{grid-template-columns:1fr}}
