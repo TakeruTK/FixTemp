@@ -1550,31 +1550,43 @@ app.post('/api/update/download', (req, res) => {
   updateDownload = { active: true, percent: 0, filePath: null, error: null }
   res.json({ started: true, filePath })
 
-  const client = downloadUrl.startsWith('https') ? https : http
-  const fileStream = createWriteStream(filePath)
-
   const doGet = (url, depth = 0) => {
     if (depth > 5) { updateDownload = { active: false, percent: 0, filePath: null, error: 'Demasiadas redirecciones' }; return }
+    const client = url.startsWith('https') ? https : http
     client.get(url, (incoming) => {
       if (incoming.statusCode >= 300 && incoming.statusCode < 400 && incoming.headers.location) {
         incoming.resume()
-        doGet(incoming.headers.location, depth + 1)
+        const nextUrl = new URL(incoming.headers.location, url).toString()
+        doGet(nextUrl, depth + 1)
+        return
+      }
+      if (incoming.statusCode !== 200) {
+        incoming.resume()
+        updateDownload = { active: false, percent: 0, filePath: null, error: `HTTP ${incoming.statusCode}` }
         return
       }
       const total = parseInt(incoming.headers['content-length'] || '0')
       let received = 0
+      const fileStream = createWriteStream(filePath)
+      let completed = false
+      const fail = (err) => {
+        if (completed) return
+        completed = true
+        void rm(filePath, { force: true }).catch(() => {})
+        updateDownload = { active: false, percent: 0, filePath: null, error: err instanceof Error ? err.message : String(err) }
+      }
       incoming.on('data', chunk => {
         received += chunk.length
-        fileStream.write(chunk)
-        updateDownload.percent = total ? Math.round(received / total * 100) : -1
+        updateDownload.percent = total ? Math.min(99, Math.round(received / total * 100)) : -1
       })
-      incoming.on('end', () => {
-        fileStream.end()
+      incoming.on('error', fail)
+      fileStream.on('error', fail)
+      fileStream.on('finish', () => {
+        if (completed) return
+        completed = true
         updateDownload = { active: false, percent: 100, filePath, error: null }
       })
-      incoming.on('error', err => {
-        updateDownload = { active: false, percent: 0, filePath: null, error: err.message }
-      })
+      incoming.pipe(fileStream)
     }).on('error', err => {
       updateDownload = { active: false, percent: 0, filePath: null, error: err.message }
     })

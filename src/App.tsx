@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowDownToLine, Bell, BookOpen, Info, Menu, RefreshCw, ShieldCheck, X } from 'lucide-react'
 import { Dashboard } from './components/Dashboard'
 import { DeviceHealth } from './components/DeviceHealth'
@@ -149,8 +149,26 @@ function MainApp() {
   const [view, setView] = useState<View>(() => /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 'health' : 'dashboard')
   const [menuOpen, setMenuOpen] = useState(false)
   const { data, error } = useMetrics()
-  const { state: updateState, visibleUpdate, installing, startDownload, install, dismiss } = useUpdates()
+  const { state: updateState, visibleUpdate, installing, startDownload, install, dismiss, check } = useUpdates()
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [autoInstallUpdate, setAutoInstallUpdate] = useState(false)
   const updateBadge = visibleUpdate || updateState.download.active || Boolean(updateState.download.filePath)
+  const updateActionDisabled = updateState.download.active || installing
+
+  useEffect(() => {
+    if (!autoInstallUpdate || !updateState.download.filePath || updateState.download.active) return
+    setAutoInstallUpdate(false)
+    void install().catch(() => {})
+  }, [autoInstallUpdate, install, updateState.download.active, updateState.download.filePath])
+
+  const runNotificationUpdate = async () => {
+    if (updateState.download.filePath) {
+      await install()
+      return
+    }
+    setAutoInstallUpdate(true)
+    await startDownload()
+  }
 
   return <div className="app-shell">
     <GpuStressEngine session={data?.stress || null}/>
@@ -160,38 +178,50 @@ function MainApp() {
         <button className="menu-button" onClick={() => setMenuOpen(value => !value)}><Menu size={20}/></button>
         <div><p>{text[view].eyebrow}</p><h1>{text[view].title}</h1></div>
         <div className="topbar__actions">
-          <button className={`icon-button ${updateBadge ? 'has-alert' : ''}`} onClick={() => setView('updates')} title={text.updateOpen}><Bell size={17}/><i/></button>
+          <button className={`icon-button ${updateBadge ? 'has-alert' : ''}`} onClick={() => setNotificationsOpen(value => !value)} title={text.updateOpen}><Bell size={17}/><i/></button>
+          {notificationsOpen ? (
+            <section className="notification-popover">
+              <div className="notification-popover__head">
+                <div>
+                  <p>{text.updateOpen}</p>
+                  <strong>{visibleUpdate ? `v${updateState.latestVersion}` : text.updateChecking}</strong>
+                </div>
+                <button className="icon-button" onClick={() => setNotificationsOpen(false)} title={text.updateLater}><X size={15}/></button>
+              </div>
+              {visibleUpdate ? (
+                <>
+                  <span>{updateState.changelog || text.updateAvailable}</span>
+                  {updateState.download.active ? (
+                    <div className="notification-progress">
+                      <i style={{ width: `${Math.max(4, updateState.download.percent)}%` }}/>
+                    </div>
+                  ) : null}
+                  <button className="intensive-button" onClick={() => void runNotificationUpdate().catch(() => setAutoInstallUpdate(false))} disabled={updateActionDisabled}>
+                    {updateState.download.active ? <RefreshCw size={15} className="spin"/> : <ArrowDownToLine size={15}/>}
+                    {updateState.download.active
+                      ? `${text.updateDownloading} ${updateState.download.percent >= 0 ? `${updateState.download.percent}%` : ''}`
+                      : updateState.download.filePath
+                        ? text.updateInstall
+                        : `${text.updateDownload} e instalar`}
+                  </button>
+                  <button className="notification-link" onClick={() => { dismiss(); setNotificationsOpen(false) }}>{text.updateLater}</button>
+                </>
+              ) : updateState.error ? (
+                <>
+                  <span className="notification-error">{updateState.error}</span>
+                  <button className="export-report-button" onClick={() => void check(true).catch(() => {})}><RefreshCw size={15}/> {text.updateChecking}</button>
+                </>
+              ) : (
+                <>
+                  <span>FixTemp esta al dia. Version actual: v{updateState.currentVersion}</span>
+                  <button className="export-report-button" onClick={() => void check(true).catch(() => {})}><RefreshCw size={15}/> {text.updateChecking}</button>
+                </>
+              )}
+            </section>
+          ) : null}
         </div>
       </header>
       <div className="content-area">
-        {visibleUpdate ? (
-          <section className="update-banner">
-            <div className="update-banner__copy">
-              <p>{updateState.download.filePath ? text.updateReady : text.updateAvailable}</p>
-              <strong>v{updateState.latestVersion}</strong>
-              <span>{updateState.changelog || text.updateChecking}</span>
-            </div>
-            <div className="update-banner__actions">
-              {!updateState.download.active && !updateState.download.filePath ? (
-                <button className="intensive-button" onClick={() => void startDownload().catch(() => {})}>
-                  <ArrowDownToLine size={15}/> {text.updateDownload}
-                </button>
-              ) : null}
-              {updateState.download.active ? (
-                <button className="export-report-button" disabled>
-                  <RefreshCw size={15} className="spin"/> {text.updateDownloading} {updateState.download.percent >= 0 ? `${updateState.download.percent}%` : ''}
-                </button>
-              ) : null}
-              {updateState.download.filePath ? (
-                <button className="intensive-button" onClick={() => void install().catch(() => {})} disabled={installing}>
-                  <ArrowDownToLine size={15}/> {text.updateInstall}
-                </button>
-              ) : null}
-              <button className="icon-button" onClick={dismiss} title={text.updateLater}><X size={16}/></button>
-            </div>
-          </section>
-        ) : null}
-
         {!visibleUpdate && updateState.error && updateState.checkedAt > 0 && view === 'updates' ? (
           <section className="update-banner update-banner--error">
             <div className="update-banner__copy">
