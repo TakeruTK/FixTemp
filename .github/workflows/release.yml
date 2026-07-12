@@ -48,8 +48,20 @@ jobs:
       - name: Restore sensor helper
         run: dotnet restore sensor-helper/FixTemp.Sensors.csproj -r win-x64
 
-      - name: Build installer
-        run: pnpm dist:win
+      - name: Build web app
+        run: pnpm build
+
+      - name: Publish sensor helper
+        run: dotnet publish sensor-helper/FixTemp.Sensors.csproj -c Release -r win-x64 --self-contained true -o sensor-helper/publish/win-x64 --no-restore
+
+      - name: Copy sensor assets
+        run: node sensor-helper/copy-assets.mjs
+
+      - name: Bundle local server
+        run: pnpm bundle:server
+
+      - name: Build Windows installer
+        run: pnpm exec electron-builder --win nsis
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
