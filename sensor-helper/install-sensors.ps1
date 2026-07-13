@@ -130,7 +130,7 @@ New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
 $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
 $pawnInstalled = $null -ne $pawnService -or (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO')
 if (!$pawnInstalled) {
-    $driver = Start-Process -FilePath $driverInstaller -ArgumentList @('/install', '--silent') -WindowStyle Hidden -Wait -PassThru
+    $driver = Start-Process -FilePath $driverInstaller -ArgumentList @('-install', '-silent') -WindowStyle Hidden -Wait -PassThru
     if ($driver.ExitCode -ne 0) { throw "PawnIO termino con codigo $($driver.ExitCode)" }
     Start-Sleep -Seconds 2
     $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
