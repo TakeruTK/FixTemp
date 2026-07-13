@@ -265,7 +265,7 @@ const applyGpuSnapshot = (gpuList, observedAt) => {
     load: load !== null && load >= 0 && load <= 100 ? round(load, 0) : metrics.gpu.load,
     temperature: temperature !== null && temperature > 0 && temperature < 125 ? round(temperature, 1) : null,
     clock: clock !== null && clock >= 0 ? round(clock, 0) : 0,
-    fan: fan !== null && fan >= 0 ? round(fan, 0) : null,
+    fan: fan !== null && fan > 0 ? round(fan, 0) : metrics.gpu.fan,
     power: power !== null && power >= 0 ? round(power, 1) : null
   }
   state.gpuSource = 'LibreHardwareMonitor · GPU'
@@ -508,7 +508,7 @@ function parseNvidiaLine(line) {
     load: round(Number(load), 0), temperature: celsius(Number(temperature)),
     clock: round(Number(clock), 0), memoryUsed: round(Number(memoryUsed), 0),
     memoryTotal: round(Number(memoryTotal), 0),
-    fan: fanValue !== null && fanValue >= 0 ? round(fanValue, 0) : null,
+    fan: fanValue !== null && fanValue > 0 ? round(fanValue, 0) : metrics.gpu.fan,
     power: Number.isFinite(Number(power)) ? round(Number(power), 1) : null,
     powerLimit: Number.isFinite(Number(powerLimit)) ? round(Number(powerLimit), 0) : null
   }
@@ -545,7 +545,7 @@ repeat(async () => {
   if (Date.now() - (state.sensorUpdatedAt.gpuHardware || 0) <= 5000) return
   const graphics = await si.graphics()
   const gpu = graphics.controllers?.[0] || {}
-  metrics.gpu = { model: gpu.model || gpu.name || 'GPU no detectada', vendor: gpu.vendor || '', load: round(gpu.utilizationGpu || 0, 0), temperature: celsius(gpu.temperatureGpu), clock: round(gpu.clockCore || 0, 0), memoryUsed: round(gpu.memoryUsed || 0, 0), memoryTotal: round(gpu.memoryTotal || 0, 0), fan: Number.isFinite(gpu.fanSpeed) && gpu.fanSpeed >= 0 ? round(gpu.fanSpeed, 0) : null, power: null, powerLimit: null }
+  metrics.gpu = { model: gpu.model || gpu.name || 'GPU no detectada', vendor: gpu.vendor || '', load: round(gpu.utilizationGpu || 0, 0), temperature: celsius(gpu.temperatureGpu), clock: round(gpu.clockCore || 0, 0), memoryUsed: round(gpu.memoryUsed || 0, 0), memoryTotal: round(gpu.memoryTotal || 0, 0), fan: Number.isFinite(gpu.fanSpeed) && gpu.fanSpeed > 0 ? round(gpu.fanSpeed, 0) : metrics.gpu.fan, power: null, powerLimit: null }
   state.gpuSource = 'Sistema operativo · información básica'
   mark('gpu')
 }, cadence(120000, 300000), 15000)
@@ -909,7 +909,7 @@ app.get('/api/metrics', (_req, res) => {
     },
     capabilities: {
       cpu: { temperature: metrics.cpu.temperature !== null, clock: metrics.cpu.clock !== null, fan: metrics.cpu.fan !== null, power: !metrics.cpu.powerEstimated && metrics.cpu.power !== null },
-      gpu: { temperature: metrics.gpu.temperature !== null, clock: metrics.gpu.clock > 0, load: state.gpuSource !== null, fan: metrics.gpu.fan !== null, power: metrics.gpu.power !== null, source: state.gpuSource },
+      gpu: { temperature: metrics.gpu.temperature !== null, clock: metrics.gpu.clock > 0, load: state.gpuSource !== null, fan: metrics.gpu.fan !== null && metrics.gpu.fan > 0, power: metrics.gpu.power !== null, source: state.gpuSource },
       battery: { present: metrics.battery.hasBattery, cycles: metrics.battery.cycleCount !== null, capacity: metrics.battery.maxCapacity !== null },
       storage: { smart: metrics.hardware.disks.some(disk => disk.smartStatus), devices: metrics.hardware.disks.length }
     }
@@ -943,7 +943,7 @@ app.get('/api/metrics/live', (_req, res) => {
     },
     capabilities: {
       cpu: { temperature: metrics.cpu.temperature !== null, clock: metrics.cpu.clock !== null, fan: metrics.cpu.fan !== null, power: !metrics.cpu.powerEstimated && metrics.cpu.power !== null },
-      gpu: { temperature: metrics.gpu.temperature !== null, clock: metrics.gpu.clock > 0, load: state.gpuSource !== null, fan: metrics.gpu.fan !== null, power: metrics.gpu.power !== null, source: state.gpuSource },
+      gpu: { temperature: metrics.gpu.temperature !== null, clock: metrics.gpu.clock > 0, load: state.gpuSource !== null, fan: metrics.gpu.fan !== null && metrics.gpu.fan > 0, power: metrics.gpu.power !== null, source: state.gpuSource },
       battery: { present: metrics.battery.hasBattery, cycles: metrics.battery.cycleCount !== null, capacity: metrics.battery.maxCapacity !== null },
       storage: { smart: metrics.hardware.disks.some(disk => disk.smartStatus), devices: metrics.hardware.disks.length }
     }

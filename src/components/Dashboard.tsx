@@ -292,21 +292,17 @@ export function Dashboard({ data }: { data: Metrics }) {
   const cpuClock = data.cpu.clock !== null ? `${data.cpu.clock} MHz${cpuClockRange}` : text.sensorNA
   const cpuTempProgress = normalize(data.cpu.temperature, 100)
   const cpuClockProgress = normalize(data.cpu.clock, Math.max(data.cpu.clockMax || 0, data.cpu.clock || 0, 5200))
-  const cpuFanAvailable = data.cpu.fan !== null && data.cpu.fan !== undefined && Number.isFinite(data.cpu.fan)
+  const cpuFanAvailable = data.cpu.fan !== null && data.cpu.fan !== undefined && Number.isFinite(data.cpu.fan) && data.cpu.fan > 0
   const cpuFanIsPercent = cpuFanAvailable && data.cpu.fan! >= 0 && data.cpu.fan! <= 100
   const cpuFanProgress = cpuFanAvailable ? normalize(data.cpu.fan!, cpuFanIsPercent ? 100 : Math.max(2200, data.cpu.fan! * 1.08)) : null
-  const cpuFanValue = cpuFanAvailable
-    ? data.cpu.fan === 0 ? text.fanStopped : `${data.cpu.fan}${cpuFanIsPercent ? '%' : ' RPM'}`
-    : text.fanUnavailable
+  const cpuFanValue = cpuFanAvailable ? `${data.cpu.fan}${cpuFanIsPercent ? '%' : ' RPM'}` : text.fanUnavailable
 
   const gpuTempProgress = normalize(data.gpu.temperature, 100)
   const gpuClockProgress = data.gpu.clock > 0 ? normalize(data.gpu.clock, Math.max(2200, data.gpu.clock * 1.08)) : null
-  const gpuFanAvailable = data.gpu.fan !== null && Number.isFinite(data.gpu.fan)
+  const gpuFanAvailable = data.gpu.fan !== null && Number.isFinite(data.gpu.fan) && data.gpu.fan > 0
   const gpuFanIsPercent = gpuFanAvailable && data.gpu.fan! >= 0 && data.gpu.fan! <= 100
   const gpuFanProgress = gpuFanAvailable ? normalize(data.gpu.fan, gpuFanIsPercent ? 100 : Math.max(2200, data.gpu.fan! * 1.08)) : null
-  const gpuFanValue = gpuFanAvailable
-    ? data.gpu.fan === 0 ? text.fanStopped : `${data.gpu.fan}${gpuFanIsPercent ? '%' : ' RPM'}`
-    : text.fanUnavailable
+  const gpuFanValue = gpuFanAvailable ? `${data.gpu.fan}${gpuFanIsPercent ? '%' : ' RPM'}` : text.fanUnavailable
 
   return <div className="dashboard-grid">
     {sensorStatus?.installerAvailable && limitedSensors ? (

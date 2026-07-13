@@ -131,7 +131,7 @@ static class Program
         BestSensorWithMinimum(sensors, type, 0.01f, preferredNames);
 
     static object? BestFanSensor(IEnumerable<ISensor> sensors, SensorType type, params string[] preferredNames) =>
-        BestSensorWithMinimum(sensors, type, 0f, preferredNames);
+        BestSensorWithMinimum(sensors, type, 0.01f, preferredNames);
 
     static bool IsCpuRelatedHardware(IHardware hardware)
     {
@@ -206,8 +206,8 @@ static class Program
                 var power = BestSensor(boardSensors, SensorType.Power, "CPU Package", "Package", "CPU", "Cores", "IA");
                 var fan = BestFanSensor(boardSensors, SensorType.Fan, "CPU Fan", "CPU_OPT", "CPU Optional", "CPU", "Processor", "Fan") ??
                     BestFanSensor(boardSensors, SensorType.Control, "CPU Fan", "CPU_OPT", "CPU Optional", "CPU", "Processor", "Fan");
-                var fans = SensorPayloads(boardSensors, SensorType.Fan, 0f)
-                    .Concat(SensorPayloads(boardSensors, SensorType.Control, 0f))
+                var fans = SensorPayloads(boardSensors, SensorType.Fan, 0.01f)
+                    .Concat(SensorPayloads(boardSensors, SensorType.Control, 0.01f))
                     .ToList();
 
                 var gpuPayload = computer.Hardware.SelectMany(Flatten)
