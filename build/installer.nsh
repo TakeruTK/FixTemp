@@ -53,8 +53,7 @@ FunctionEnd
   Pop $0
   Pop $1
   ${If} $0 != 0
-    MessageBox MB_ICONSTOP "FixTemp no pudo activar el lector real de temperatura. La instalacion se cancelara para evitar mostrar datos incompletos."
-    Abort
+    DetailPrint "FixTemp se instalo, pero el lector avanzado de temperatura no pudo activarse. La aplicacion se abrira en modo limitado."
   ${EndIf}
 !macroend
 

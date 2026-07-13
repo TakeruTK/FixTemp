@@ -130,7 +130,7 @@ New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
 $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
 $pawnInstalled = $null -ne $pawnService -or (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO')
 if (!$pawnInstalled) {
-    $driver = Start-Process -FilePath $driverInstaller -ArgumentList '/S' -WindowStyle Hidden -Wait -PassThru
+    $driver = Start-Process -FilePath $driverInstaller -ArgumentList @('/install', '--silent') -WindowStyle Hidden -Wait -PassThru
     if ($driver.ExitCode -ne 0) { throw "PawnIO termino con codigo $($driver.ExitCode)" }
     Start-Sleep -Seconds 2
     $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
@@ -206,6 +206,13 @@ if ($RelaunchApp) {
 exit 0
 } catch {
     Write-InstallLog "ERROR: $($_.Exception.Message)"
-    Write-Error $_
-    exit 1
+    if ($RelaunchApp) {
+        try {
+            Start-FixTempRelaunch
+            Write-InstallLog 'FixTemp se relanzara en modo limitado porque el lector avanzado no se pudo activar.'
+        } catch {
+            Write-InstallLog "No se pudo relanzar FixTemp despues del error: $($_.Exception.Message)"
+        }
+    }
+    exit 0
 }
