@@ -26,7 +26,7 @@ function Start-FixTempRelaunch {
         return
     }
 
-    $scriptPath = Join-Path $env:TEMP 'FixTemp-Relaunch.ps1'
+    $launcherPath = Join-Path $env:TEMP 'FixTemp-Relaunch.vbs'
     $startupShortcutPath = $null
     try {
         $startupFolder = [Environment]::GetFolderPath('Startup')
@@ -34,31 +34,52 @@ function Start-FixTempRelaunch {
             $startupShortcutPath = Join-Path $startupFolder 'FixTemp-Relaunch.lnk'
         }
     } catch {}
-    $escapedAppExecutable = $appExecutable.Replace("'", "''")
-    $escapedStartupShortcutPath = if ($startupShortcutPath) { $startupShortcutPath.Replace("'", "''") } else { '' }
-    $script = @"
-`$app = '$escapedAppExecutable'
-`$startupLink = '$escapedStartupShortcutPath'
-Start-Sleep -Seconds 18
-for (`$i = 1; `$i -le 8; `$i++) {
-    Start-Process -FilePath `$app -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 8
-    if (Get-Process -Name 'FixTemp' -ErrorAction SilentlyContinue) { break }
-}
-if (![string]::IsNullOrWhiteSpace(`$startupLink)) {
-    Remove-Item -LiteralPath `$startupLink -Force -ErrorAction SilentlyContinue
-}
-Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
+    $escapedAppExecutable = $appExecutable.Replace("""", """""")
+    $escapedStartupShortcutPath = if ($startupShortcutPath) { $startupShortcutPath.Replace("""", """""") } else { '' }
+    $escapedLogFile = $logFile.Replace("""", """""")
+    $launcher = @"
+On Error Resume Next
+Dim shell, fso, app, startupLink, logFile, log
+Set shell = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+app = "$escapedAppExecutable"
+startupLink = "$escapedStartupShortcutPath"
+logFile = "$escapedLogFile"
+
+Sub WriteLog(message)
+  On Error Resume Next
+  Set log = fso.OpenTextFile(logFile, 8, True)
+  log.WriteLine Now & " " & message
+  log.Close
+End Sub
+
+WriteLog "Relanzador silencioso iniciado: " & app
+WScript.Sleep 12000
+Dim i
+For i = 1 To 10
+  If fso.FileExists(app) Then
+    shell.Run """" & app & """", 1, False
+    WriteLog "Intento de relanzar FixTemp #" & i
+  Else
+    WriteLog "No existe el ejecutable en el intento #" & i
+  End If
+  WScript.Sleep 5000
+Next
+
+If startupLink <> "" Then
+  If fso.FileExists(startupLink) Then fso.DeleteFile startupLink, True
+End If
+fso.DeleteFile WScript.ScriptFullName, True
 "@
-    Set-Content -LiteralPath $scriptPath -Value $script -Encoding UTF8 -Force
+    Set-Content -LiteralPath $launcherPath -Value $launcher -Encoding ASCII -Force
 
     try {
         if ($startupShortcutPath) {
             $wsh = New-Object -ComObject WScript.Shell
             $shortcut = $wsh.CreateShortcut($startupShortcutPath)
-            $shortcut.TargetPath = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
-            $shortcut.Arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
-            $shortcut.WorkingDirectory = Split-Path -Parent $scriptPath
+            $shortcut.TargetPath = "$env:WINDIR\System32\wscript.exe"
+            $shortcut.Arguments = "//B //Nologo `"$launcherPath`""
+            $shortcut.WorkingDirectory = Split-Path -Parent $launcherPath
             $shortcut.WindowStyle = 7
             $shortcut.Description = 'Relanzar FixTemp despues de actualizar'
             $shortcut.Save()
@@ -67,8 +88,15 @@ Remove-Item -LiteralPath `$PSCommandPath -Force -ErrorAction SilentlyContinue
         Write-InstallLog "No se pudo crear acceso de inicio temporal: $($_.Exception.Message)"
     }
 
-    Start-Process -FilePath "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath) -WindowStyle Hidden
-    Write-InstallLog "Relanzado diferido de FixTemp programado con $scriptPath."
+    try {
+        Start-Process -FilePath $appExecutable -WindowStyle Normal
+        Write-InstallLog 'Relanzado directo de FixTemp solicitado.'
+    } catch {
+        Write-InstallLog "No se pudo hacer relanzado directo: $($_.Exception.Message)"
+    }
+
+    Start-Process -FilePath "$env:WINDIR\System32\wscript.exe" -ArgumentList @('//B', '//Nologo', $launcherPath) -WindowStyle Hidden
+    Write-InstallLog "Relanzado diferido de FixTemp programado con $launcherPath."
 }
 
 if ($Uninstall) {
