@@ -1,8 +1,11 @@
 {
   "name": "fixtemp-monitor",
-  "version": "0.6.14",
+  "version": "0.6.15",
   "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
-  "author": "FixTemp",
+  "author": {
+    "name": "FixPC",
+    "email": "contacto@fixpc.cl"
+  },
   "private": true,
   "type": "module",
   "main": "electron/main.mjs",
@@ -45,6 +48,13 @@
   "build": {
     "appId": "cl.fixtemp.monitor",
     "productName": "FixTemp",
+    "copyright": "Copyright (c) 2026 FixPC",
+    "extraMetadata": {
+      "author": {
+        "name": "FixPC",
+        "email": "contacto@fixpc.cl"
+      }
+    },
     "artifactName": "FixTemp-Setup-${version}.${ext}",
     "asar": true,
     "asarUnpack": ["build-server/**/*", "server/system-info.ps1"],
