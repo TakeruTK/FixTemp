@@ -1602,6 +1602,13 @@ app.post('/api/update/install', (req, res) => {
   if (!filePath || !existsSync(filePath)) return res.status(400).json({ error: 'Instalador no encontrado en: ' + filePath })
   res.json({ installing: true })
   setTimeout(async () => {
+    const directLogPath = path.join(windowsProgramDataPath, 'FixTemp', 'update-install.log')
+    await mkdir(path.dirname(directLogPath), { recursive: true })
+    await writeFile(directLogPath, `${new Date().toISOString()} Lanzando instalador directo: ${filePath}\r\n`, { flag: 'a' })
+    const installerProcess = spawn(filePath, ['/S'], { detached: true, stdio: 'ignore', windowsHide: true })
+    installerProcess.unref()
+    process.exit(0)
+    return
     const relaunchTarget = appExecutablePath && existsSync(appExecutablePath) ? appExecutablePath : path.join(process.env.ProgramFiles || appInstallDir, 'FixTemp', 'FixTemp.exe')
     const updateScriptPath = path.join(os.tmpdir(), 'FixTemp-Apply-Update.ps1')
     const logPath = path.join(windowsProgramDataPath, 'FixTemp', 'update-install.log')
