@@ -151,6 +151,8 @@ const numericOrNull = (value) => {
   return Number.isFinite(number) ? number : null
 }
 const parseJsonText = (value) => JSON.parse(String(value).replace(/^\uFEFF/, ''))
+const psQuote = value => `'${String(value).replace(/'/g, "''")}'`
+const vbsQuote = value => String(value).replace(/"/g, '""')
 const cpuFanRank = (sensor) => {
   const label = `${sensor?.source || ''} ${sensor?.hardware || ''} ${sensor?.name || ''}`.toLowerCase()
   if (/cpu[\s_-]*(fan|opt|optional)|processor/.test(label)) return 100
@@ -956,10 +958,16 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.get('/api/sensors/status', (_req, res) => {
+  const taskInstalled = process.platform === 'win32'
+    ? existsSync(path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'Tasks', 'FixTemp Sensors'))
+    : false
+  const snapshotExists = Boolean(hardwareSnapshotPath && existsSync(hardwareSnapshotPath))
   res.json({
     helperAvailable: Boolean(sensorHelperPath && existsSync(sensorHelperPath)),
     installerAvailable: Boolean(sensorInstallScriptPath && existsSync(sensorInstallScriptPath)),
     directActive: state.hardwareSensor.status === 'active',
+    taskInstalled,
+    snapshotExists,
     cpuFanAvailable: metrics.cpu.fan !== null && metrics.cpu.fan > 0,
     cpuFanSource: metrics.cpu.fanSource || null,
     cpuFanCandidates: state.cpuFanCandidates,
@@ -969,24 +977,37 @@ app.get('/api/sensors/status', (_req, res) => {
   })
 })
 
-app.post('/api/sensors/install', (_req, res) => {
+app.post('/api/sensors/install', async (_req, res) => {
   if (process.platform !== 'win32' || !sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
     res.status(400).json({ error: 'El instalador de sensores no esta disponible en este equipo.' })
     return
   }
 
-  const escapedScript = sensorInstallScriptPath.replace(/'/g, "''")
-  const escapedDir = appInstallDir.replace(/'/g, "''")
-  const installCommand = `Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ''${escapedScript}'' -InstallDir ''${escapedDir}'''`
-
   try {
-    const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', installCommand], {
+    const launcherPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.ps1')
+    const logPath = path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
+    const script = [
+      '$ErrorActionPreference = "Continue"',
+      `$log = ${psQuote(logPath)}`,
+      'function Write-LaunchLog([string]$message) { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $log) | Out-Null; Add-Content -LiteralPath $log -Encoding UTF8 -Value "$(Get-Date -Format o) $message" }',
+      `Write-LaunchLog "Solicitando elevacion para sensores. script=${sensorInstallScriptPath} installDir=${appInstallDir}"`,
+      `$arguments = @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', ${psQuote(sensorInstallScriptPath)}, '-InstallDir', ${psQuote(appInstallDir)})`,
+      'try {',
+      '  $process = Start-Process -FilePath powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList $arguments -PassThru -ErrorAction Stop',
+      '  Write-LaunchLog "Asistente elevado iniciado pid=$($process.Id)"',
+      '} catch {',
+      '  Write-LaunchLog "No se pudo iniciar asistente elevado: $($_.Exception.Message)"',
+      '  exit 1',
+      '}'
+    ].join('\r\n')
+    await writeFile(launcherPath, script, 'utf8')
+    const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', launcherPath], {
       windowsHide: true,
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
-    res.json({ launched: true })
+    res.json({ launched: true, logPath })
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : 'No se pudo iniciar el instalador de sensores.' })
   }
@@ -1593,9 +1614,6 @@ app.post('/api/update/download', (req, res) => {
   }
   doGet(downloadUrl)
 })
-
-const psQuote = value => `'${String(value).replace(/'/g, "''")}'`
-const vbsQuote = value => String(value).replace(/"/g, '""')
 
 app.post('/api/update/install', (req, res) => {
   if (process.platform !== 'win32') return res.status(400).json({ error: 'La instalación automática de actualizaciones está disponible actualmente sólo en Windows.' })

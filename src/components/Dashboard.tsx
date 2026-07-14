@@ -14,6 +14,8 @@ interface SensorStatus {
   helperAvailable: boolean
   installerAvailable: boolean
   directActive: boolean
+  taskInstalled?: boolean
+  snapshotExists?: boolean
   cpuFanAvailable: boolean
   cpuFanSource?: string | null
   cpuFanCandidates?: { value: number; source?: string | null; name?: string | null; type?: string | null }[]
@@ -72,6 +74,9 @@ const copy = {
     sensorsInstalling: 'Abriendo asistente...',
     sensorsRefresh: 'Actualizar estado',
     sensorsLaunched: 'Se abrio el asistente con permisos de Windows. Cuando termine, espera unos segundos y pulsa actualizar.',
+    sensorsWaiting: 'Esperando confirmacion del lector avanzado...',
+    sensorsActivated: 'Lectura avanzada activa.',
+    sensorsStillLimited: 'El lector avanzado aun no quedo activo. Acepta el permiso de Windows o revisa si el antivirus lo bloqueo.',
     sensorsError: 'No se pudo iniciar el asistente de sensores.',
     sensorsLimited: 'Modo limitado',
     sensorsSource: 'Origen',
@@ -114,6 +119,9 @@ const copy = {
     sensorsInstalling: 'Opening assistant...',
     sensorsRefresh: 'Refresh status',
     sensorsLaunched: 'The elevated assistant was opened. When it finishes, wait a few seconds and refresh the status.',
+    sensorsWaiting: 'Waiting for the advanced reader to confirm...',
+    sensorsActivated: 'Advanced readout is active.',
+    sensorsStillLimited: 'The advanced reader is not active yet. Accept the Windows permission or check whether antivirus blocked it.',
     sensorsError: 'Could not start the sensor assistant.',
     sensorsLimited: 'Limited mode',
     sensorsSource: 'Source',
@@ -156,6 +164,9 @@ const copy = {
     sensorsInstalling: '正在打开向导...',
     sensorsRefresh: '刷新状态',
     sensorsLaunched: '已打开 Windows 提权向导。完成后请等待几秒再刷新状态。',
+    sensorsWaiting: '正在等待高级读取器确认...',
+    sensorsActivated: '高级读取已启用。',
+    sensorsStillLimited: '高级读取器尚未启用。请接受 Windows 权限或检查防病毒软件是否阻止了它。',
     sensorsError: '无法启动传感器向导。',
     sensorsLimited: '受限模式',
     sensorsSource: '来源',
@@ -253,7 +264,19 @@ export function Dashboard({ data }: { data: Metrics }) {
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || text.sensorsError)
-      setSensorMessage(text.sensorsLaunched)
+      setSensorMessage(text.sensorsWaiting)
+      for (let attempt = 0; attempt < 30; attempt++) {
+        await new Promise(resolve => window.setTimeout(resolve, 2000))
+        const statusResponse = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
+        if (!statusResponse.ok) continue
+        const status = await statusResponse.json() as SensorStatus
+        setSensorStatus(status)
+        if (status.directActive && status.cpuTempAvailable) {
+          setSensorMessage(text.sensorsActivated)
+          return
+        }
+      }
+      setSensorMessage(text.sensorsStillLimited)
     } catch (error) {
       setSensorMessage(error instanceof Error ? error.message : text.sensorsError)
     } finally {
