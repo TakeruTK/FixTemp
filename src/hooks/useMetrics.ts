@@ -51,12 +51,15 @@ export function useMetrics() {
     }
 
     const onVisibility = () => { if (!document.hidden) refresh() }
+    const onManualRefresh = () => { refresh() }
     document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('fixtemp:metrics-refreshed', onManualRefresh)
     refresh()
     return () => {
       active = false
       window.clearTimeout(timer)
       document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('fixtemp:metrics-refreshed', onManualRefresh)
     }
   }, [])
 

@@ -86,6 +86,7 @@ const copy = {
     sensorsTask: 'Tarea',
     sensorsSnapshot: 'Muestra',
     sensorsSource: 'Origen',
+    refreshMeter: 'Actualizar medidor',
     sensorsRecommendation: 'Recomendacion',
     okShort: 'OK',
     missingShort: 'Sin lectura'
@@ -137,6 +138,7 @@ const copy = {
     sensorsTask: 'Task',
     sensorsSnapshot: 'Sample',
     sensorsSource: 'Source',
+    refreshMeter: 'Refresh meter',
     sensorsRecommendation: 'Recommendation',
     okShort: 'OK',
     missingShort: 'Missing'
@@ -188,6 +190,7 @@ const copy = {
     sensorsTask: '任务',
     sensorsSnapshot: '样本',
     sensorsSource: '来源',
+    refreshMeter: '刷新仪表',
     sensorsRecommendation: '建议',
     okShort: '正常',
     missingShort: '缺失'
@@ -203,6 +206,7 @@ export function Dashboard({ data }: { data: Metrics }) {
   const [sensorLoading, setSensorLoading] = useState(false)
   const [sensorInstalling, setSensorInstalling] = useState(false)
   const [sensorMessage, setSensorMessage] = useState<string | null>(null)
+  const [refreshingMeter, setRefreshingMeter] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -322,6 +326,27 @@ export function Dashboard({ data }: { data: Metrics }) {
     }
   }
 
+  const refreshMeter = async (target: 'cpu' | 'gpu' | 'memory' | 'network' | 'storage') => {
+    setRefreshingMeter(target)
+    try {
+      await fetch('/api/metrics/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target }),
+        signal: AbortSignal.timeout(12000)
+      })
+      window.dispatchEvent(new Event('fixtemp:metrics-refreshed'))
+    } finally {
+      window.setTimeout(() => setRefreshingMeter(current => current === target ? null : current), 350)
+    }
+  }
+
+  const meterButton = (target: 'cpu' | 'gpu' | 'memory' | 'network' | 'storage') => (
+    <button className="meter-refresh-button" title={text.refreshMeter || 'Actualizar medidor'} aria-label={`${text.refreshMeter || 'Actualizar medidor'}: ${target}`} onClick={() => void refreshMeter(target)} disabled={refreshingMeter === target}>
+      <RefreshCw size={14} className={refreshingMeter === target ? 'spin' : undefined}/>
+    </button>
+  )
+
   const directSensor = data.hardwareSensor?.status === 'active'
   const limitedSensors = !sensorStatus?.directActive || !sensorStatus?.cpuTempAvailable
   const cpuClockRange = data.cpu.clockMin && data.cpu.clockMax && Math.abs(data.cpu.clockMax - data.cpu.clockMin) >= 5
@@ -404,6 +429,7 @@ export function Dashboard({ data }: { data: Metrics }) {
       value={data.cpu.load}
       history={data.history.map(h => h.cpu)}
       badge={directSensor ? text.directSensor : text.limitedRead}
+      action={meterButton('cpu')}
       stats={[
         { label: text.cpuTemp, value: data.cpu.temperature !== null ? `${data.cpu.temperature}°C` : text.sensorNA, progress: cpuTempProgress },
         { label: text.cpuClock, value: cpuClock, progress: cpuClockProgress },
@@ -418,6 +444,7 @@ export function Dashboard({ data }: { data: Metrics }) {
       tone="lime"
       history={data.history.map(h => h.gpu)}
       badge={data.capabilities?.gpu.source || data.gpu.vendor || undefined}
+      action={meterButton('gpu')}
       stats={[
         { label: text.gpuTemp, value: data.gpu.temperature !== null ? `${data.gpu.temperature}°C` : text.noSensor, progress: gpuTempProgress },
         { label: text.frequency, value: data.gpu.clock ? `${data.gpu.clock} MHz` : '—', progress: gpuClockProgress },
@@ -425,9 +452,9 @@ export function Dashboard({ data }: { data: Metrics }) {
       ]}
     />
 
-    <section className="compact-card ram-card"><div className="card-heading"><div><p className="eyebrow">{text.memory}</p><h2>RAM</h2></div><MemoryStick size={21}/></div><div className="compact-main"><Gauge value={data.memory.load} label={text.inUse} tone="amber" size="small"/><div className="big-number"><strong>{data.memory.used}</strong><span>{text.of} {data.memory.total} GB</span><small>{data.memory.available} {text.available}</small></div></div></section>
-    <section className="compact-card network-card"><div className="card-heading"><div><p className="eyebrow">{text.liveTraffic}</p><h2>{text.network}</h2></div><Radio size={21}/></div><p className="muted">{data.network.interface}</p><div className="network-values"><div><ArrowDown size={18}/><span>{text.download}</span><strong>{formatRate(data.network.down)}</strong></div><div><ArrowUp size={18}/><span>{text.upload}</span><strong>{formatRate(data.network.up)}</strong></div></div></section>
-    <section className="compact-card storage-card"><div className="card-heading"><div><p className="eyebrow">{text.capacity}</p><h2>{text.storage}</h2></div><HardDrive size={21}/></div><div className="drive-list">{data.storage.map(disk => <div className="drive" key={`${disk.fs}-${disk.mount}`}><div><strong>{disk.mount || disk.fs}</strong><span>{disk.used} / {disk.size} GB</span></div><div className="bar"><i style={{ width: `${disk.use}%` }}/></div><b>{disk.use}%</b></div>)}</div></section>
+    <section className="compact-card ram-card"><div className="card-heading"><div><p className="eyebrow">{text.memory}</p><h2>RAM</h2></div><div className="card-actions">{meterButton('memory')}<MemoryStick size={21}/></div></div><div className="compact-main"><Gauge value={data.memory.load} label={text.inUse} tone="amber" size="small"/><div className="big-number"><strong>{data.memory.used}</strong><span>{text.of} {data.memory.total} GB</span><small>{data.memory.available} {text.available}</small></div></div></section>
+    <section className="compact-card network-card"><div className="card-heading"><div><p className="eyebrow">{text.liveTraffic}</p><h2>{text.network}</h2></div><div className="card-actions">{meterButton('network')}<Radio size={21}/></div></div><p className="muted">{data.network.interface}</p><div className="network-values"><div><ArrowDown size={18}/><span>{text.download}</span><strong>{formatRate(data.network.down)}</strong></div><div><ArrowUp size={18}/><span>{text.upload}</span><strong>{formatRate(data.network.up)}</strong></div></div></section>
+    <section className="compact-card storage-card"><div className="card-heading"><div><p className="eyebrow">{text.capacity}</p><h2>{text.storage}</h2></div><div className="card-actions">{meterButton('storage')}<HardDrive size={21}/></div></div><div className="drive-list">{data.storage.map(disk => <div className="drive" key={`${disk.fs}-${disk.mount}`}><div><strong>{disk.mount || disk.fs}</strong><span>{disk.used} / {disk.size} GB</span></div><div className="bar"><i style={{ width: `${disk.use}%` }}/></div><b>{disk.use}%</b></div>)}</div></section>
     <section className="process-card"><div className="card-heading"><div><p className="eyebrow">{text.activity}</p><h2>{text.topProcesses}</h2></div><span className="uptime"><Clock3 size={14}/> {text.activeFor} {formatUptime(processUptime)}</span></div><div className="process-table"><div className="process-row table-head"><span>{text.process}</span><span>PID</span><span>CPU</span><span>RAM</span></div>{processes.map(p => <div className="process-row" key={p.pid}><span><i>{p.name.slice(0, 1).toUpperCase()}</i>{p.name}</span><span>{p.pid}</span><span>{p.cpu}%</span><span>{p.memory} MB</span></div>)}</div></section>
   </div>
 }

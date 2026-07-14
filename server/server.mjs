@@ -406,6 +406,19 @@ repeat(async () => {
   await refreshCpuSnapshot()
 }, cadence(1000, 5000))
 
+async function refreshCpuSensorFallbacks() {
+  await ensureFreshCpuSnapshot(0).catch(() => {})
+  await refreshBasicCpuClock().catch(() => {})
+  const temp = await si.cpuTemperature().catch(() => null)
+  const fallbackTemperature = celsius(temp?.main)
+  if (fallbackTemperature !== null) {
+    metrics.cpu.temperature = fallbackTemperature
+    metrics.cpu.temperatureSource = 'systeminformation'
+    mark('temperature')
+  }
+  await refreshWindowsCpuFanFallback().catch(() => {})
+}
+
 repeat(async () => {
   if (!hardwareSnapshotPath) return
   try {
@@ -613,6 +626,15 @@ repeat(async () => {
   mark('memory')
 }, cadence(2000, 10000))
 
+async function refreshMemorySnapshot() {
+  const available = os.freemem()
+  const used = totalMemory - available
+  metrics.memory = { load: round(used / totalMemory * 100, 0), used: round(used / 1024 ** 3, 1), total: round(totalMemory / 1024 ** 3, 1), available: round(available / 1024 ** 3, 1) }
+  metrics.hardware.uptime = os.uptime()
+  metrics.timestamp = Date.now()
+  mark('memory')
+}
+
 repeat(async () => {
   const [cpu, osInfo] = await Promise.all([si.cpu(), si.osInfo()])
   metrics.cpu.model = `${cpu.manufacturer || ''} ${cpu.brand || ''}`.trim() || metrics.cpu.model
@@ -689,6 +711,29 @@ const selectBasicGpu = (controllers) => {
     return 10
   }
   return [...list].sort((a, b) => priority(b) - priority(a))[0]
+}
+async function refreshBasicGpuSnapshot(force = false) {
+  if (state.nvidiaSmiAvailable) return
+  if (state.hardwareSensor.status === 'active') return
+  if (!force && Date.now() - (state.sensorUpdatedAt.gpuHardware || 0) <= 5000) return
+  const graphics = await si.graphics()
+  const gpu = selectBasicGpu(graphics.controllers)
+  if (!gpu) return
+  metrics.gpu = {
+    ...metrics.gpu,
+    model: gpu.model || gpu.name || metrics.gpu.model,
+    vendor: gpu.vendor || metrics.gpu.vendor,
+    load: round(numericOrNull(gpu.utilizationGpu) || metrics.gpu.load || 0, 0),
+    temperature: celsius(numericOrNull(gpu.temperatureGpu)),
+    clock: round(numericOrNull(gpu.clockCore) || metrics.gpu.clock || 0, 0),
+    memoryUsed: round(numericOrNull(gpu.memoryUsed) || metrics.gpu.memoryUsed || 0, 0),
+    memoryTotal: round(numericOrNull(gpu.memoryTotal) || metrics.gpu.memoryTotal || 0, 0),
+    fan: Number.isFinite(gpu.fanSpeed) && gpu.fanSpeed > 0 ? round(gpu.fanSpeed, 0) : metrics.gpu.fan,
+    power: null,
+    powerLimit: null
+  }
+  state.gpuSource = 'Sistema operativo · información básica'
+  mark('gpu')
 }
 // Fallback GPU sólo cuando nvidia-smi no está activo
 repeat(async () => {
@@ -803,6 +848,19 @@ if (process.platform === 'win32') {
   }, cadence(2000, 10000), 1500)
 }
 
+async function refreshNetworkSnapshot() {
+  const network = await si.networkStats()
+  const primary = network.find((n) => n.operstate === 'up' && !n.virtual) || network.find((n) => !n.virtual) || network[0] || {}
+  if (primary.iface) {
+    metrics.network = {
+      interface: primary.iface,
+      down: round((primary.rx_sec || 0) / 1024, 0),
+      up: round((primary.tx_sec || 0) / 1024, 0)
+    }
+    mark('network')
+  }
+}
+
 async function refreshProcessesSnapshot() {
   const processes = await si.processes()
   metrics.processes = [...(processes.list || [])]
@@ -827,22 +885,30 @@ repeat(async () => {
   await queueProcessRefresh(true)
 }, cadence(180000, 360000), 45000)
 
-repeat(async () => {
+async function refreshStorageSnapshot() {
   const fsSize = await si.fsSize()
   metrics.storage = fsSize.filter((disk) => disk.size > 0).slice(0, 5).map((disk) => ({
     fs: disk.fs, mount: disk.mount, used: round(disk.used / 1024 ** 3, 0), size: round(disk.size / 1024 ** 3, 0), use: round(disk.use, 0)
   }))
   mark('storage')
-}, cadence(120000, 480000), 90000)
+}
 
-repeat(async () => {
+async function refreshDiskLayoutSnapshot() {
   const disks = await si.diskLayout()
   metrics.hardware.disks = disks.map((d) => ({
     name: d.name, type: d.type, size: round(d.size / 1024 ** 3, 0), vendor: d.vendor,
     smartStatus: d.smartStatus || null, interfaceType: d.interfaceType || null, serialNum: d.serialNum || null
   }))
   mark('storage')
-}, cadence(600000, 1800000), 32000)
+}
+
+repeat(async () => {
+  await refreshStorageSnapshot()
+}, cadence(120000, 480000), 2500)
+
+repeat(async () => {
+  await refreshDiskLayoutSnapshot()
+}, cadence(600000, 1800000), 8000)
 
 let previousCpuUsage = process.cpuUsage()
 let previousCpuTime = Date.now()
@@ -1113,6 +1179,32 @@ app.get('/api/metrics/live', (_req, res) => {
       storage: { smart: metrics.hardware.disks.some(disk => disk.smartStatus), devices: metrics.hardware.disks.length }
     }
   })
+})
+
+app.post('/api/metrics/refresh', async (req, res) => {
+  state.lastClientSeen = Date.now()
+  const target = String(req.body?.target || 'all').toLowerCase()
+  const tasks = {
+    cpu: () => refreshCpuSensorFallbacks(),
+    gpu: () => refreshBasicGpuSnapshot(true),
+    memory: () => refreshMemorySnapshot(),
+    network: () => refreshNetworkSnapshot(),
+    storage: async () => {
+      await refreshStorageSnapshot()
+      await refreshDiskLayoutSnapshot().catch(() => {})
+    },
+    processes: () => queueProcessRefresh(true)
+  }
+  const selected = target === 'all'
+    ? Object.entries(tasks)
+    : Object.entries(tasks).filter(([name]) => name === target)
+  if (!selected.length) return res.status(400).json({ error: 'Unknown refresh target' })
+  const results = await Promise.allSettled(selected.map(([, task]) => task()))
+  const errors = results
+    .map((result, index) => result.status === 'rejected' ? `${selected[index][0]}: ${result.reason?.message || result.reason}` : null)
+    .filter(Boolean)
+  expireStaleCpuHardware(Date.now())
+  res.json({ ok: errors.length === 0, target, errors, metrics })
 })
 
 app.get('/api/health', (_req, res) => {
