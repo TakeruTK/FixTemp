@@ -165,6 +165,11 @@ const numericOrNull = (value) => {
   const number = Number(value)
   return Number.isFinite(number) ? number : null
 }
+const normalizeClockMhz = (value) => {
+  const number = numericOrNull(value)
+  if (number === null || number <= 0) return null
+  return number > 100 ? round(number, 0) : round(number * 1000, 0)
+}
 const parseJsonText = (value) => JSON.parse(String(value).replace(/^\uFEFF/, ''))
 const psQuote = value => `'${String(value).replace(/'/g, "''")}'`
 const vbsQuote = value => String(value).replace(/"/g, '""')
@@ -254,7 +259,8 @@ const expireStaleCpuHardware = (now = Date.now()) => {
   if (state.sensorUpdatedAt.power && powerAge > 5000) clearCpuPower()
 
   const clockAge = now - (state.sensorUpdatedAt.clock || 0)
-  if (state.sensorUpdatedAt.clock && clockAge > 5000) clearCpuClock()
+  const clockMaxAge = metrics.cpu.clockSource === 'systeminformation' ? 180000 : 5000
+  if (state.sensorUpdatedAt.clock && clockAge > clockMaxAge) clearCpuClock()
 
   const fanAge = now - (state.sensorUpdatedAt.fan || 0)
   if (state.sensorUpdatedAt.fan && fanAge > 5000) clearCpuFan()
@@ -343,7 +349,7 @@ const applyHardwareSnapshot = (snapshot, source) => {
 const invalidateHardwareSnapshot = (error) => {
   if (Date.now() - state.hardwareSensor.updatedAt <= 5000) return
   if (metrics.cpu.temperatureSource !== 'systeminformation') clearCpuTemperature()
-  clearCpuClock()
+  if (metrics.cpu.clockSource !== 'systeminformation') clearCpuClock()
   clearCpuFan()
   clearCpuPower()
   state.hardwareSensor = { ...state.hardwareSensor, status: 'unavailable', error: error.message }
@@ -362,15 +368,30 @@ const repeat = (task, interval, initialDelay = 0) => {
 }
 
 let cpuRefreshPromise = null
+async function refreshBasicCpuClock() {
+  try {
+    const speed = await si.cpuCurrentSpeed()
+    const clock = normalizeClockMhz(speed.avg || speed.current || speed.max || speed.min)
+    if (clock !== null) {
+      metrics.cpu.clock = clock
+      metrics.cpu.clockMin = normalizeClockMhz(speed.min)
+      metrics.cpu.clockMax = normalizeClockMhz(speed.max)
+      metrics.cpu.clockSource = 'systeminformation'
+      state.sensorUpdatedAt.clock = Date.now()
+      return true
+    }
+  } catch {
+    // La carga de CPU sigue funcionando aunque Windows no entregue frecuencia.
+  }
+  return false
+}
 async function refreshCpuSnapshot() {
   const load = await si.currentLoad()
   metrics.cpu.load = round(load.currentLoad, 0)
   metrics.cpu.perCore = (load.cpus || []).map((item) => round(item.load, 0))
   if (Date.now() - (state.sensorUpdatedAt.clock || 0) > 5000) {
-    metrics.cpu.clock = null
-    metrics.cpu.clockMin = null
-    metrics.cpu.clockMax = null
-    metrics.cpu.clockSource = null
+    const restored = await refreshBasicCpuClock()
+    if (!restored && metrics.cpu.clockSource !== 'systeminformation') clearCpuClock()
   }
   if (metrics.cpu.powerEstimated) metrics.cpu.power = null
   mark('cpu')
@@ -657,17 +678,42 @@ function startNvidiaSmiLoop() {
     })
   } catch { state.nvidiaSmiAvailable = false }
 }
+const selectBasicGpu = (controllers) => {
+  const list = Array.isArray(controllers) ? controllers.filter(Boolean) : []
+  if (!list.length) return null
+  const priority = item => {
+    const text = `${item.vendor || ''} ${item.model || item.name || ''}`.toLowerCase()
+    if (/nvidia|geforce|rtx|gtx|quadro/.test(text)) return 40
+    if (/amd|radeon/.test(text)) return 35
+    if (/intel/.test(text)) return 20
+    return 10
+  }
+  return [...list].sort((a, b) => priority(b) - priority(a))[0]
+}
 // Fallback GPU sólo cuando nvidia-smi no está activo
 repeat(async () => {
   if (state.nvidiaSmiAvailable) return
   if (state.hardwareSensor.status === 'active') return
   if (Date.now() - (state.sensorUpdatedAt.gpuHardware || 0) <= 5000) return
   const graphics = await si.graphics()
-  const gpu = graphics.controllers?.[0] || {}
-  metrics.gpu = { model: gpu.model || gpu.name || 'GPU no detectada', vendor: gpu.vendor || '', load: round(gpu.utilizationGpu || 0, 0), temperature: celsius(gpu.temperatureGpu), clock: round(gpu.clockCore || 0, 0), memoryUsed: round(gpu.memoryUsed || 0, 0), memoryTotal: round(gpu.memoryTotal || 0, 0), fan: Number.isFinite(gpu.fanSpeed) && gpu.fanSpeed > 0 ? round(gpu.fanSpeed, 0) : metrics.gpu.fan, power: null, powerLimit: null }
+  const gpu = selectBasicGpu(graphics.controllers)
+  if (!gpu) return
+  metrics.gpu = {
+    ...metrics.gpu,
+    model: gpu.model || gpu.name || metrics.gpu.model,
+    vendor: gpu.vendor || metrics.gpu.vendor,
+    load: round(numericOrNull(gpu.utilizationGpu) || metrics.gpu.load || 0, 0),
+    temperature: celsius(numericOrNull(gpu.temperatureGpu)),
+    clock: round(numericOrNull(gpu.clockCore) || metrics.gpu.clock || 0, 0),
+    memoryUsed: round(numericOrNull(gpu.memoryUsed) || metrics.gpu.memoryUsed || 0, 0),
+    memoryTotal: round(numericOrNull(gpu.memoryTotal) || metrics.gpu.memoryTotal || 0, 0),
+    fan: Number.isFinite(gpu.fanSpeed) && gpu.fanSpeed > 0 ? round(gpu.fanSpeed, 0) : metrics.gpu.fan,
+    power: null,
+    powerLimit: null
+  }
   state.gpuSource = 'Sistema operativo · información básica'
   mark('gpu')
-}, cadence(120000, 300000), 15000)
+}, cadence(30000, 120000), 2000)
 setTimeout(startNvidiaSmiLoop, 1000).unref()
 
 repeat(async () => {
