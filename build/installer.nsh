@@ -49,6 +49,14 @@ FunctionEnd
   Delete "$SMSTARTUP\FixTemp.lnk"
   ${If} $StartWithWindows == "1"
     CreateShortCut "$SMSTARTUP\FixTemp.lnk" "$INSTDIR\FixTemp.exe"
+    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup -RelaunchApp'
+  ${Else}
+    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -RelaunchApp'
+  ${EndIf}
+  Pop $0
+  Pop $1
+  ${If} $0 != 0
+    DetailPrint "FixTemp se instalo, pero el lector avanzado de sensores no pudo activarse. La aplicacion se abrira en modo limitado."
   ${EndIf}
 !macroend
 

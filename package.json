@@ -1,6 +1,6 @@
 {
   "name": "fixtemp-monitor",
-  "version": "0.6.26",
+  "version": "0.6.27",
   "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
   "author": {
     "name": "FixPC",

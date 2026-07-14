@@ -479,25 +479,22 @@ async function launchElevatedSensorInstaller(reason = 'Activar sensores') {
   const logPath = sensorLaunchLogPath || path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
   await writeFile(logPath, `${new Date().toISOString()} ${reason}. script=${sensorInstallScriptPath} installDir=${appInstallDir}\r\n`, { flag: 'a' })
   if (elevateExecutablePath && existsSync(elevateExecutablePath)) {
-    const child = spawn(elevateExecutablePath, [
-      'powershell.exe',
-      '-NoProfile',
-      '-WindowStyle',
-      'Hidden',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      sensorInstallScriptPath,
-      '-InstallDir',
-      appInstallDir
-    ], {
+    const cmdPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.cmd')
+    const cmd = [
+      '@echo off',
+      `>> "${logPath}" echo %DATE% %TIME% CMD elevado iniciado`,
+      `"${process.env.SystemRoot || 'C:\\Windows'}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "${sensorInstallScriptPath}" -InstallDir "${appInstallDir}" >> "${logPath}" 2>&1`,
+      `>> "${logPath}" echo %DATE% %TIME% CMD elevado termino con codigo %ERRORLEVEL%`
+    ].join('\r\n')
+    await writeFile(cmdPath, cmd, 'utf8')
+    const child = spawn(elevateExecutablePath, ['-wait', 'cmd.exe', '/d', '/c', cmdPath], {
       windowsHide: true,
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
-    await writeFile(logPath, `${new Date().toISOString()} elevate.exe lanzado desde ${elevateExecutablePath}\r\n`, { flag: 'a' })
-    return { launched: true, method: 'elevate.exe', logPath }
+    await writeFile(logPath, `${new Date().toISOString()} elevate.exe lanzado desde ${elevateExecutablePath} con ${cmdPath}\r\n`, { flag: 'a' })
+    return { launched: true, method: 'elevate.exe-cmd', logPath }
   }
 
   const launcherPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.ps1')
