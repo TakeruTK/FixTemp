@@ -344,7 +344,7 @@ function SensorPanel() {
   const installSensors = async () => {
     setInstalling(true)
     try {
-      const res = await fetch('/api/sensors/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      const res = await fetch('/api/sensors/reconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || labels.error)
       setMessage(labels.ok)

@@ -39,6 +39,10 @@ const sensorInstallScriptPath = process.platform === 'win32'
       ? path.join(process.resourcesPath, 'sensor-helper', 'install-sensors.ps1')
       : path.resolve(runtimeDir, '../sensor-helper/publish/win-x64/install-sensors.ps1'))
   : null
+const sensorTaskName = 'FixTemp Sensors'
+const sensorTaskPath = process.platform === 'win32'
+  ? path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'Tasks', sensorTaskName)
+  : null
 const appInstallDir = process.resourcesPath
   ? path.dirname(process.resourcesPath)
   : path.resolve(runtimeDir, '..')
@@ -405,6 +409,85 @@ function startSensorFallback() {
   child.once('exit', () => { if (state.sensorProcess === child) state.sensorProcess = null })
 }
 if (sensorHelperPath && existsSync(sensorHelperPath)) setTimeout(startSensorFallback, 4000).unref()
+
+const buildSensorStatus = () => ({
+  helperAvailable: Boolean(sensorHelperPath && existsSync(sensorHelperPath)),
+  installerAvailable: Boolean(sensorInstallScriptPath && existsSync(sensorInstallScriptPath)),
+  directActive: state.hardwareSensor.status === 'active',
+  taskInstalled: Boolean(sensorTaskPath && existsSync(sensorTaskPath)),
+  snapshotExists: Boolean(hardwareSnapshotPath && existsSync(hardwareSnapshotPath)),
+  cpuFanAvailable: metrics.cpu.fan !== null && metrics.cpu.fan > 0,
+  cpuFanSource: metrics.cpu.fanSource || null,
+  cpuFanCandidates: state.cpuFanCandidates,
+  cpuTempAvailable: metrics.cpu.temperature !== null,
+  source: state.hardwareSensor.source || null,
+  error: state.hardwareSensor.error || null
+})
+
+async function waitForSensorConfirmation(maxAttempts = 18, intervalMs = 1500) {
+  let lastError = null
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, attempt === 0 ? 300 : intervalMs))
+    if (hardwareSnapshotPath && existsSync(hardwareSnapshotPath)) {
+      try {
+        const snapshot = parseJsonText(await readFile(hardwareSnapshotPath, 'utf8'))
+        applyHardwareSnapshot(snapshot, 'LibreHardwareMonitor + PawnIO · SYSTEM')
+      } catch (error) {
+        lastError = error
+      }
+    }
+    const status = buildSensorStatus()
+    if (status.directActive && status.cpuTempAvailable) return { confirmed: true, status }
+  }
+  if (lastError && !state.hardwareSensor.error) state.hardwareSensor = { ...state.hardwareSensor, error: lastError.message }
+  return { confirmed: false, status: buildSensorStatus() }
+}
+
+async function startSensorTaskNow() {
+  if (process.platform !== 'win32' || !sensorTaskPath || !existsSync(sensorTaskPath)) return false
+  const shell = process.env.SystemRoot
+    ? path.join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+    : 'powershell.exe'
+  await execFileAsync(shell, [
+    '-NoProfile',
+    '-NonInteractive',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-Command',
+    `Start-ScheduledTask -TaskName ${psQuote(sensorTaskName)}; Start-Sleep -Milliseconds 700`
+  ], { windowsHide: true, timeout: 10000 })
+  return true
+}
+
+async function launchElevatedSensorInstaller(reason = 'Activar sensores') {
+  if (!sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
+    throw new Error('El instalador de sensores no esta disponible en este equipo.')
+  }
+  const launcherPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.ps1')
+  const logPath = path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
+  const script = [
+    '$ErrorActionPreference = "Continue"',
+    `$log = ${psQuote(logPath)}`,
+    'function Write-LaunchLog([string]$message) { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $log) | Out-Null; Add-Content -LiteralPath $log -Encoding UTF8 -Value "$(Get-Date -Format o) $message" }',
+    `Write-LaunchLog ${psQuote(`${reason}. script=${sensorInstallScriptPath} installDir=${appInstallDir}`)}`,
+    `$arguments = @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', ${psQuote(sensorInstallScriptPath)}, '-InstallDir', ${psQuote(appInstallDir)})`,
+    'try {',
+    '  $process = Start-Process -FilePath powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList $arguments -PassThru -ErrorAction Stop',
+    '  Write-LaunchLog "Asistente elevado iniciado pid=$($process.Id)"',
+    '} catch {',
+    '  Write-LaunchLog "No se pudo iniciar asistente elevado: $($_.Exception.Message)"',
+    '  exit 1',
+    '}'
+  ].join('\r\n')
+  await writeFile(launcherPath, script, 'utf8')
+  const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', launcherPath], {
+    windowsHide: true,
+    detached: true,
+    stdio: 'ignore'
+  })
+  child.unref()
+  return { launched: true, logPath }
+}
 
 let cpuFanFallbackPromise = null
 async function refreshWindowsCpuFanFallback() {
@@ -958,23 +1041,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.get('/api/sensors/status', (_req, res) => {
-  const taskInstalled = process.platform === 'win32'
-    ? existsSync(path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'Tasks', 'FixTemp Sensors'))
-    : false
-  const snapshotExists = Boolean(hardwareSnapshotPath && existsSync(hardwareSnapshotPath))
-  res.json({
-    helperAvailable: Boolean(sensorHelperPath && existsSync(sensorHelperPath)),
-    installerAvailable: Boolean(sensorInstallScriptPath && existsSync(sensorInstallScriptPath)),
-    directActive: state.hardwareSensor.status === 'active',
-    taskInstalled,
-    snapshotExists,
-    cpuFanAvailable: metrics.cpu.fan !== null && metrics.cpu.fan > 0,
-    cpuFanSource: metrics.cpu.fanSource || null,
-    cpuFanCandidates: state.cpuFanCandidates,
-    cpuTempAvailable: metrics.cpu.temperature !== null,
-    source: state.hardwareSensor.source || null,
-    error: state.hardwareSensor.error || null
-  })
+  res.json(buildSensorStatus())
 })
 
 app.post('/api/sensors/install', async (_req, res) => {
@@ -984,32 +1051,49 @@ app.post('/api/sensors/install', async (_req, res) => {
   }
 
   try {
-    const launcherPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.ps1')
-    const logPath = path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
-    const script = [
-      '$ErrorActionPreference = "Continue"',
-      `$log = ${psQuote(logPath)}`,
-      'function Write-LaunchLog([string]$message) { New-Item -ItemType Directory -Force -Path (Split-Path -Parent $log) | Out-Null; Add-Content -LiteralPath $log -Encoding UTF8 -Value "$(Get-Date -Format o) $message" }',
-      `Write-LaunchLog "Solicitando elevacion para sensores. script=${sensorInstallScriptPath} installDir=${appInstallDir}"`,
-      `$arguments = @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', ${psQuote(sensorInstallScriptPath)}, '-InstallDir', ${psQuote(appInstallDir)})`,
-      'try {',
-      '  $process = Start-Process -FilePath powershell.exe -Verb RunAs -WindowStyle Hidden -ArgumentList $arguments -PassThru -ErrorAction Stop',
-      '  Write-LaunchLog "Asistente elevado iniciado pid=$($process.Id)"',
-      '} catch {',
-      '  Write-LaunchLog "No se pudo iniciar asistente elevado: $($_.Exception.Message)"',
-      '  exit 1',
-      '}'
-    ].join('\r\n')
-    await writeFile(launcherPath, script, 'utf8')
-    const child = spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', launcherPath], {
-      windowsHide: true,
-      detached: true,
-      stdio: 'ignore'
-    })
-    child.unref()
-    res.json({ launched: true, logPath })
+    res.json(await launchElevatedSensorInstaller('Solicitando elevacion para sensores'))
   } catch (error) {
     res.status(500).json({ error: error instanceof Error ? error.message : 'No se pudo iniciar el instalador de sensores.' })
+  }
+})
+
+app.post('/api/sensors/reconnect', async (_req, res) => {
+  if (process.platform !== 'win32') {
+    await ensureFreshCpuSnapshot(0).catch(() => {})
+    return res.json({ reconnected: true, needsElevation: false, status: buildSensorStatus() })
+  }
+
+  if (!sensorTaskPath || !existsSync(sensorTaskPath)) {
+    if (!sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
+      res.status(400).json({ error: 'El instalador de sensores no esta disponible en este equipo.' })
+      return
+    }
+    try {
+      res.json({ needsElevation: true, ...(await launchElevatedSensorInstaller('Reconectar sensores solicita elevacion')), status: buildSensorStatus() })
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'No se pudo iniciar el instalador de sensores.' })
+    }
+    return
+  }
+
+  try {
+    if (state.sensorProcess) {
+      state.sensorProcess.kill()
+      state.sensorProcess = null
+    }
+    await startSensorTaskNow()
+    await ensureFreshCpuSnapshot(0).catch(() => {})
+    const result = await waitForSensorConfirmation()
+    if (!result.confirmed) startSensorFallback()
+    res.json({ reconnected: result.confirmed, needsElevation: false, status: result.status })
+  } catch (error) {
+    startSensorFallback()
+    try {
+      const launch = await launchElevatedSensorInstaller(`Reconectar sensores requiere elevacion despues de error: ${error instanceof Error ? error.message : 'desconocido'}`)
+      res.json({ needsElevation: true, ...launch, status: buildSensorStatus() })
+    } catch {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'No se pudo reconectar el lector de sensores.', status: buildSensorStatus() })
+    }
   }
 })
 

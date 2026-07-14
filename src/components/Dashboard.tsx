@@ -72,13 +72,19 @@ const copy = {
     sensorsReadyText: 'FixTemp ya puede usar temperatura y ventilador reales desde el lector de placa.',
     sensorsInstall: 'Activar sensores avanzados',
     sensorsInstalling: 'Abriendo asistente...',
+    sensorsReconnect: 'Actualizar y conectar sensores',
+    sensorsReconnecting: 'Reconectando sensores...',
     sensorsRefresh: 'Actualizar estado',
     sensorsLaunched: 'Se abrio el asistente con permisos de Windows. Cuando termine, espera unos segundos y pulsa actualizar.',
+    sensorsNeedsElevation: 'Se necesita permiso de Windows para instalar el lector avanzado. Acepta el aviso y FixTemp verificara la lectura.',
     sensorsWaiting: 'Esperando confirmacion del lector avanzado...',
     sensorsActivated: 'Lectura avanzada activa.',
+    sensorsReconnected: 'Sensores reconectados.',
     sensorsStillLimited: 'El lector avanzado aun no quedo activo. Acepta el permiso de Windows o revisa si el antivirus lo bloqueo.',
     sensorsError: 'No se pudo iniciar el asistente de sensores.',
     sensorsLimited: 'Modo limitado',
+    sensorsTask: 'Tarea',
+    sensorsSnapshot: 'Muestra',
     sensorsSource: 'Origen',
     sensorsRecommendation: 'Recomendacion',
     okShort: 'OK',
@@ -117,13 +123,19 @@ const copy = {
     sensorsReadyText: 'FixTemp can already use real temperature and fan readings from the motherboard reader.',
     sensorsInstall: 'Enable advanced sensors',
     sensorsInstalling: 'Opening assistant...',
+    sensorsReconnect: 'Refresh and connect sensors',
+    sensorsReconnecting: 'Reconnecting sensors...',
     sensorsRefresh: 'Refresh status',
     sensorsLaunched: 'The elevated assistant was opened. When it finishes, wait a few seconds and refresh the status.',
+    sensorsNeedsElevation: 'Windows permission is required to install the advanced reader. Accept the prompt and FixTemp will verify the reading.',
     sensorsWaiting: 'Waiting for the advanced reader to confirm...',
     sensorsActivated: 'Advanced readout is active.',
+    sensorsReconnected: 'Sensors reconnected.',
     sensorsStillLimited: 'The advanced reader is not active yet. Accept the Windows permission or check whether antivirus blocked it.',
     sensorsError: 'Could not start the sensor assistant.',
     sensorsLimited: 'Limited mode',
+    sensorsTask: 'Task',
+    sensorsSnapshot: 'Sample',
     sensorsSource: 'Source',
     sensorsRecommendation: 'Recommendation',
     okShort: 'OK',
@@ -162,13 +174,19 @@ const copy = {
     sensorsReadyText: 'FixTemp 已可使用来自主板读取器的真实温度和风扇读数。',
     sensorsInstall: '启用高级传感器',
     sensorsInstalling: '正在打开向导...',
+    sensorsReconnect: '刷新并连接传感器',
+    sensorsReconnecting: '正在重新连接传感器...',
     sensorsRefresh: '刷新状态',
     sensorsLaunched: '已打开 Windows 提权向导。完成后请等待几秒再刷新状态。',
+    sensorsNeedsElevation: '需要 Windows 权限来安装高级读取器。接受提示后 FixTemp 会验证读数。',
     sensorsWaiting: '正在等待高级读取器确认...',
     sensorsActivated: '高级读取已启用。',
+    sensorsReconnected: '传感器已重新连接。',
     sensorsStillLimited: '高级读取器尚未启用。请接受 Windows 权限或检查防病毒软件是否阻止了它。',
     sensorsError: '无法启动传感器向导。',
     sensorsLimited: '受限模式',
+    sensorsTask: '任务',
+    sensorsSnapshot: '样本',
     sensorsSource: '来源',
     sensorsRecommendation: '建议',
     okShort: '正常',
@@ -243,7 +261,7 @@ export function Dashboard({ data }: { data: Metrics }) {
     const poll = async () => {
       await loadStatus(timer === 0)
       if (!active) return
-      const limited = !sensorStatus?.directActive || !sensorStatus?.cpuFanAvailable || !sensorStatus?.cpuTempAvailable
+      const limited = !sensorStatus?.directActive || !sensorStatus?.cpuTempAvailable
       timer = window.setTimeout(poll, limited ? 12000 : 30000)
     }
 
@@ -254,42 +272,38 @@ export function Dashboard({ data }: { data: Metrics }) {
     }
   }, [language, sensorStatus?.cpuFanAvailable, sensorStatus?.cpuTempAvailable, sensorStatus?.directActive, text.sensorsError])
 
-  const installSensors = async () => {
+  const reconnectSensors = async () => {
     setSensorInstalling(true)
     try {
-      const response = await fetch('/api/sensors/install', {
+      const response = await fetch('/api/sensors/reconnect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}'
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || text.sensorsError)
-      setSensorMessage(text.sensorsWaiting)
-      for (let attempt = 0; attempt < 30; attempt++) {
-        await new Promise(resolve => window.setTimeout(resolve, 2000))
-        const statusResponse = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
-        if (!statusResponse.ok) continue
-        const status = await statusResponse.json() as SensorStatus
-        setSensorStatus(status)
-        if (status.directActive && status.cpuTempAvailable) {
-          setSensorMessage(text.sensorsActivated)
-          return
+      if (result.status) setSensorStatus(result.status as SensorStatus)
+      if (result.needsElevation) {
+        setSensorMessage(text.sensorsNeedsElevation)
+        for (let attempt = 0; attempt < 30; attempt++) {
+          await new Promise(resolve => window.setTimeout(resolve, 2000))
+          const statusResponse = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
+          if (!statusResponse.ok) continue
+          const status = await statusResponse.json() as SensorStatus
+          setSensorStatus(status)
+          if (status.directActive && status.cpuTempAvailable) {
+            setSensorMessage(text.sensorsActivated)
+            return
+          }
         }
+        setSensorMessage(text.sensorsStillLimited)
+        return
       }
-      setSensorMessage(text.sensorsStillLimited)
+      setSensorMessage(result.reconnected || result.status?.cpuTempAvailable ? text.sensorsReconnected : text.sensorsStillLimited)
     } catch (error) {
       setSensorMessage(error instanceof Error ? error.message : text.sensorsError)
     } finally {
       setSensorInstalling(false)
-      try {
-        const response = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
-        if (response.ok) {
-          const result = await response.json() as SensorStatus
-          setSensorStatus(result)
-        }
-      } catch {
-        // no-op
-      }
     }
   }
 
@@ -309,7 +323,7 @@ export function Dashboard({ data }: { data: Metrics }) {
   }
 
   const directSensor = data.hardwareSensor?.status === 'active'
-  const limitedSensors = !sensorStatus?.directActive || !sensorStatus?.cpuFanAvailable || !sensorStatus?.cpuTempAvailable
+  const limitedSensors = !sensorStatus?.directActive || !sensorStatus?.cpuTempAvailable
   const cpuClockRange = data.cpu.clockMin && data.cpu.clockMax && Math.abs(data.cpu.clockMax - data.cpu.clockMin) >= 5
     ? ` · ${data.cpu.clockMin}–${data.cpu.clockMax}` : ''
   const cpuClock = data.cpu.clock !== null ? `${data.cpu.clock} MHz${cpuClockRange}` : text.sensorNA
@@ -339,8 +353,8 @@ export function Dashboard({ data }: { data: Metrics }) {
           {sensorMessage ? <span className="sensor-helper-note">{sensorMessage}</span> : null}
         </div>
         <div className="sensor-helper-actions">
-          <button className="intensive-button" onClick={installSensors} disabled={sensorInstalling}>
-            <ShieldCheck size={15}/> {sensorInstalling ? text.sensorsInstalling : text.sensorsInstall}
+          <button className="intensive-button" onClick={() => void reconnectSensors()} disabled={sensorInstalling}>
+            <ShieldCheck size={15}/> {sensorInstalling ? text.sensorsReconnecting : (sensorStatus.taskInstalled ? text.sensorsReconnect : text.sensorsInstall)}
           </button>
           <button className="export-report-button" onClick={() => void refreshSensors()} disabled={sensorLoading}>
             <RefreshCw size={15} className={sensorLoading ? 'spin' : undefined}/> {text.sensorsRefresh}
@@ -351,6 +365,10 @@ export function Dashboard({ data }: { data: Metrics }) {
               CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}
               {' · '}
               CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}
+              {' | '}
+              {text.sensorsTask}: {sensorStatus.taskInstalled ? text.okShort : text.missingShort}
+              {' | '}
+              {text.sensorsSnapshot}: {sensorStatus.snapshotExists ? text.okShort : text.missingShort}
             </small>
           </div>
         </div>
@@ -362,6 +380,20 @@ export function Dashboard({ data }: { data: Metrics }) {
           <h3>{text.sensorsReady}</h3>
           <p>{text.sensorsReadyText}</p>
           {sensorStatus.source ? <span>{text.sensorsSource}: {sensorStatus.source}</span> : null}
+          {sensorMessage ? <span className="sensor-helper-note">{sensorMessage}</span> : null}
+        </div>
+        <div className="sensor-helper-actions">
+          <button className="export-report-button" onClick={() => void reconnectSensors()} disabled={sensorInstalling}>
+            <RefreshCw size={15} className={sensorInstalling ? 'spin' : undefined}/> {sensorInstalling ? text.sensorsReconnecting : text.sensorsReconnect}
+          </button>
+          <div className="sensor-helper-status">
+            <b>{text.sensorsReady}</b>
+            <small>
+              CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}
+              {' | '}
+              CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}
+            </small>
+          </div>
         </div>
       </section>
     ) : null}
