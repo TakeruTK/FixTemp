@@ -43,6 +43,17 @@ const sensorTaskName = 'FixTemp Sensors'
 const sensorTaskPath = process.platform === 'win32'
   ? path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'Tasks', sensorTaskName)
   : null
+const elevateExecutablePath = process.platform === 'win32'
+  ? (process.resourcesPath && existsSync(path.join(process.resourcesPath, 'elevate.exe'))
+      ? path.join(process.resourcesPath, 'elevate.exe')
+      : path.resolve(runtimeDir, '../release/win-unpacked/resources/elevate.exe'))
+  : null
+const sensorLaunchLogPath = process.platform === 'win32'
+  ? path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
+  : null
+const sensorInstallLogPath = process.platform === 'win32'
+  ? path.join(windowsProgramDataPath, 'FixTemp', 'sensor-install.log')
+  : null
 const appInstallDir = process.resourcesPath
   ? path.dirname(process.resourcesPath)
   : path.resolve(runtimeDir, '..')
@@ -416,6 +427,8 @@ const buildSensorStatus = () => ({
   directActive: state.hardwareSensor.status === 'active',
   taskInstalled: Boolean(sensorTaskPath && existsSync(sensorTaskPath)),
   snapshotExists: Boolean(hardwareSnapshotPath && existsSync(hardwareSnapshotPath)),
+  launchLogPath: sensorLaunchLogPath,
+  installLogPath: sensorInstallLogPath,
   cpuFanAvailable: metrics.cpu.fan !== null && metrics.cpu.fan > 0,
   cpuFanSource: metrics.cpu.fanSource || null,
   cpuFanCandidates: state.cpuFanCandidates,
@@ -463,8 +476,31 @@ async function launchElevatedSensorInstaller(reason = 'Activar sensores') {
   if (!sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
     throw new Error('El instalador de sensores no esta disponible en este equipo.')
   }
+  const logPath = sensorLaunchLogPath || path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
+  await writeFile(logPath, `${new Date().toISOString()} ${reason}. script=${sensorInstallScriptPath} installDir=${appInstallDir}\r\n`, { flag: 'a' })
+  if (elevateExecutablePath && existsSync(elevateExecutablePath)) {
+    const child = spawn(elevateExecutablePath, [
+      'powershell.exe',
+      '-NoProfile',
+      '-WindowStyle',
+      'Hidden',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      sensorInstallScriptPath,
+      '-InstallDir',
+      appInstallDir
+    ], {
+      windowsHide: true,
+      detached: true,
+      stdio: 'ignore'
+    })
+    child.unref()
+    await writeFile(logPath, `${new Date().toISOString()} elevate.exe lanzado desde ${elevateExecutablePath}\r\n`, { flag: 'a' })
+    return { launched: true, method: 'elevate.exe', logPath }
+  }
+
   const launcherPath = path.join(os.tmpdir(), 'FixTemp-Install-Sensors.ps1')
-  const logPath = path.join(os.tmpdir(), 'FixTemp-sensor-install-launch.log')
   const script = [
     '$ErrorActionPreference = "Continue"',
     `$log = ${psQuote(logPath)}`,
@@ -486,7 +522,8 @@ async function launchElevatedSensorInstaller(reason = 'Activar sensores') {
     stdio: 'ignore'
   })
   child.unref()
-  return { launched: true, logPath }
+  await writeFile(logPath, `${new Date().toISOString()} fallback powershell lanzado desde ${launcherPath}\r\n`, { flag: 'a' })
+  return { launched: true, method: 'powershell-runas', logPath }
 }
 
 let cpuFanFallbackPromise = null
