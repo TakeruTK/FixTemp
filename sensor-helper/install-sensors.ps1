@@ -136,30 +136,28 @@ $sensorDirectory = Join-Path $InstallDir 'resources\sensor-helper'
 $sensorExecutable = Join-Path $sensorDirectory 'FixTemp.Sensors.exe'
 $driverInstaller = Join-Path $sensorDirectory 'PawnIO_setup.exe'
 if (!(Test-Path -LiteralPath $sensorExecutable)) { throw 'No se encontro FixTemp.Sensors.exe' }
-if (!(Test-Path -LiteralPath $driverInstaller)) { throw 'No se encontro PawnIO_setup.exe' }
 
 New-Item -ItemType Directory -Path $dataDirectory -Force | Out-Null
 $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
 $pawnInstalled = $null -ne $pawnService -or (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO')
-if (!$pawnInstalled) {
+if (!$pawnInstalled -and (Test-Path -LiteralPath $driverInstaller)) {
     $driver = Start-Process -FilePath $driverInstaller -ArgumentList @('-install', '-silent') -WindowStyle Hidden -Wait -PassThru
     if ($driver.ExitCode -ne 0) { throw "PawnIO termino con codigo $($driver.ExitCode)" }
     Start-Sleep -Seconds 2
     $pawnService = Get-Service -Name 'PawnIO' -ErrorAction SilentlyContinue
 }
 if (!$pawnService) {
-    throw 'PawnIO no quedo registrado como servicio despues de la instalacion.'
-}
-if ($pawnService.Status -ne 'Running') {
+    Write-InstallLog 'PawnIO no esta incluido en este instalador; se usara lectura LibreHardwareMonitor sin driver avanzado.'
+} elseif ($pawnService.Status -ne 'Running') {
     Start-Service -Name 'PawnIO'
     for ($serviceAttempt = 0; $serviceAttempt -lt 15; $serviceAttempt++) {
         Start-Sleep -Seconds 1
         $pawnService.Refresh()
         if ($pawnService.Status -eq 'Running') { break }
     }
-}
-if ($pawnService.Status -ne 'Running') {
-    throw "PawnIO no logro iniciar correctamente. Estado actual: $($pawnService.Status)"
+    if ($pawnService.Status -ne 'Running') {
+        Write-InstallLog "PawnIO no logro iniciar correctamente. Estado actual: $($pawnService.Status). Se continua en modo lectura local limitada."
+    }
 }
 
 $action = New-ScheduledTaskAction -Execute $sensorExecutable -Argument "--snapshot `"$snapshot`""

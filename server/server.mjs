@@ -271,16 +271,17 @@ const expireStaleCpuHardware = (now = Date.now()) => {
   }
 }
 const applyGpuSnapshot = (gpuList, observedAt) => {
-  if (!Array.isArray(gpuList) || !gpuList.length) return
+  if (!Array.isArray(gpuList) || !gpuList.length) return false
   const priority = item => /AMD/i.test(item?.vendor || '') ? 3 : /NVIDIA/i.test(item?.vendor || '') ? 2 : /Intel/i.test(item?.vendor || '') ? 1 : 0
   const ordered = [...gpuList].sort((a, b) => priority(b) - priority(a))
   const selected = ordered.find(item => item.model === metrics.gpu.model) || ordered[0]
-  if (state.nvidiaSmiAvailable && /NVIDIA/i.test(selected.vendor || '')) return
+  if (state.nvidiaSmiAvailable && /NVIDIA/i.test(selected.vendor || '')) return false
   const temperature = sensorValue(selected.temperature)
   const load = sensorValue(selected.load)
   const clock = sensorValue(selected.clock)
   const fan = sensorValue(selected.fan)
   const power = sensorValue(selected.power)
+  const hasHardwareReading = temperature !== null || load !== null || clock !== null || fan !== null || power !== null
   metrics.gpu = {
     ...metrics.gpu,
     model: selected.model || metrics.gpu.model,
@@ -294,6 +295,7 @@ const applyGpuSnapshot = (gpuList, observedAt) => {
   state.gpuSource = 'LibreHardwareMonitor · GPU'
   state.sensorUpdatedAt.gpu = observedAt
   state.sensorUpdatedAt.gpuHardware = observedAt
+  return hasHardwareReading
 }
 const applyHardwareSnapshot = (snapshot, source) => {
   const age = Date.now() - Number(snapshot.timestamp || 0)
@@ -336,12 +338,12 @@ const applyHardwareSnapshot = (snapshot, source) => {
     clearCpuFan()
   }
   if (cpu.model) metrics.cpu.model = cpu.model
-  applyGpuSnapshot(snapshot.gpus, observedAt)
+  const hasGpuHardware = applyGpuSnapshot(snapshot.gpus, observedAt)
   const hasAnyCpuHardware = hasTemperature || hasPower || hasFan
   state.hardwareSensor = {
-    status: hasAnyCpuHardware ? 'active' : 'unavailable',
+    status: hasAnyCpuHardware || hasGpuHardware ? 'active' : 'unavailable',
     source,
-    error: hasTemperature ? null : 'El lector no entrego temperatura de CPU en esta muestra.',
+    error: hasTemperature || hasGpuHardware ? null : 'El lector no entrego temperatura de CPU en esta muestra.',
     updatedAt: Number(snapshot.timestamp)
   }
   state.sensorUpdatedAt.hardware = observedAt
@@ -491,6 +493,8 @@ const buildSensorStatus = () => ({
   cpuFanSource: metrics.cpu.fanSource || null,
   cpuFanCandidates: state.cpuFanCandidates,
   cpuTempAvailable: metrics.cpu.temperature !== null,
+  gpuTempAvailable: metrics.gpu.temperature !== null,
+  gpuSource: state.gpuSource || null,
   source: state.hardwareSensor.source || null,
   error: state.hardwareSensor.error || null
 })
@@ -508,7 +512,7 @@ async function waitForSensorConfirmation(maxAttempts = 18, intervalMs = 1500) {
       }
     }
     const status = buildSensorStatus()
-    if (status.directActive && status.cpuTempAvailable) return { confirmed: true, status }
+    if (status.directActive && (status.cpuTempAvailable || status.cpuFanAvailable || status.gpuTempAvailable)) return { confirmed: true, status }
   }
   if (lastError && !state.hardwareSensor.error) state.hardwareSensor = { ...state.hardwareSensor, error: lastError.message }
   return { confirmed: false, status: buildSensorStatus() }

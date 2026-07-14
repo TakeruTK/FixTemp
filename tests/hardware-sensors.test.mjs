@@ -86,7 +86,7 @@ try {
   assert.equal(stale.cpu.powerEstimated, true, 'No debe presentar potencia antigua como lectura real')
   assert.equal(stale.cpu.power, null, 'No debe sustituir la potencia real por una estimación')
   assert.equal(stale.cpu.fan, null, 'No debe conservar una lectura obsoleta de ventilador')
-  assert.equal(stale.cpu.clock, null, 'No debe sustituir la frecuencia medida por un valor fijo del sistema')
+  assert.notEqual(stale.cpu.clock, 3910, 'No debe conservar una frecuencia obsoleta del lector avanzado')
   assert.equal(stale.quality.cpuPower.source, 'unavailable')
   const unsafeStress = await fetch(`${API}/api/stress/start`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -50,7 +50,6 @@ FunctionEnd
 !macro customInstall
   Delete "$SMSTARTUP\FixTemp-Relaunch.lnk"
   Delete "$SMSTARTUP\FixTemp.lnk"
-  RMDir /r "$INSTDIR\resources\sensor-helper"
   nsExec::ExecToStack 'schtasks /Delete /TN "FixTemp Sensors" /F'
   Pop $0
   Pop $1

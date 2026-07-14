@@ -1,6 +1,6 @@
 {
   "name": "fixtemp-monitor",
-  "version": "0.6.32",
+  "version": "0.6.33",
   "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
   "author": {
     "name": "FixPC",
@@ -59,6 +59,13 @@
     "asar": true,
     "asarUnpack": ["build-server/**/*", "server/system-info.ps1"],
     "files": ["dist/**/*", "electron/**/*", "build-server/**/*", "server/system-info.ps1", "server/system-details.mjs", "assets/**/*", "package.json"],
+    "extraResources": [
+      {
+        "from": "sensor-helper/publish/win-x64",
+        "to": "sensor-helper",
+        "filter": ["**/*", "!PawnIO_setup.exe"]
+      }
+    ],
     "directories": { "output": "release", "buildResources": "assets" },
     "win": {
       "target": ["nsis"],
