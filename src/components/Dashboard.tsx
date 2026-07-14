@@ -383,13 +383,15 @@ export function Dashboard({ data }: { data: Metrics }) {
 
   return <div className="dashboard-grid">
     {sensorStatus && limitedSensors ? (
-      <section className="sensor-helper-card">
+      <section className="sensor-helper-card sensor-helper-card--compact">
         <div className="sensor-helper-copy">
-          <p className="eyebrow">{text.sensorsRecommendation}</p>
-          <h3>{text.sensorsTitle}</h3>
-          <p>{text.sensorsText}</p>
-          {sensorStatus.source ? <span>{text.sensorsSource}: {sensorStatus.source}</span> : null}
-          {sensorStatus.error ? <span className="sensor-helper-error">{sensorStatus.error}</span> : null}
+          <p className="eyebrow">{text.sensorsLimited}</p>
+          <h3>{text.sensorsReconnect}</h3>
+          <div className="sensor-status-pills">
+            <span>CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}</span>
+            <span>CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}</span>
+            <span>{text.sensorsSnapshot}: {sensorStatus.snapshotExists ? text.okShort : text.missingShort}</span>
+          </div>
           {sensorMessage ? <span className="sensor-helper-note">{sensorMessage}</span> : null}
         </div>
         <div className="sensor-helper-actions">
