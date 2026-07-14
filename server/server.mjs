@@ -450,16 +450,11 @@ repeat(async () => {
   try {
     const snapshot = parseJsonText(await readFile(hardwareSnapshotPath, 'utf8'))
     applyHardwareSnapshot(snapshot, 'LibreHardwareMonitor + PawnIO · SYSTEM')
-    if (state.hardwareSensor.status === 'active' && state.sensorProcess) {
-      state.sensorProcess.kill()
-      state.sensorProcess = null
-    }
   } catch (error) { invalidateHardwareSnapshot(error); startSensorFallback() }
 }, cadence(1000, 5000), 500)
 
 function startSensorFallback() {
-  if (!sensorHelperPath || !existsSync(sensorHelperPath) || state.sensorProcess || state.hardwareSensor.status === 'active') return
-  if (state.hardwareSensor.status === 'active') return
+  if (!sensorHelperPath || !existsSync(sensorHelperPath) || state.sensorProcess) return
   const child = spawn(sensorHelperPath, [], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] })
   state.sensorProcess = child
   let buffer = ''
