@@ -22,6 +22,8 @@ interface SensorStatus {
   cpuTempAvailable: boolean
   source: string | null
   error?: string | null
+  message?: string | null
+  limited?: boolean
 }
 
 const formatRate = (kb: number) => kb > 1024 ? `${(kb / 1024).toFixed(1)} MB/s` : `${kb} KB/s`
@@ -303,7 +305,7 @@ export function Dashboard({ data }: { data: Metrics }) {
         setSensorMessage(text.sensorsStillLimited)
         return
       }
-      setSensorMessage(result.reconnected || result.status?.cpuTempAvailable ? text.sensorsReconnected : text.sensorsStillLimited)
+      setSensorMessage(result.message || (result.reconnected || result.status?.cpuTempAvailable ? text.sensorsReconnected : text.sensorsStillLimited))
     } catch (error) {
       setSensorMessage(error instanceof Error ? error.message : text.sensorsError)
     } finally {
@@ -329,6 +331,19 @@ export function Dashboard({ data }: { data: Metrics }) {
   const refreshMeter = async (target: 'cpu' | 'gpu' | 'memory' | 'network' | 'storage') => {
     setRefreshingMeter(target)
     try {
+      if (target === 'cpu' || target === 'gpu') {
+        const sensorResponse = await fetch('/api/sensors/reconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+          signal: AbortSignal.timeout(15000)
+        })
+        const sensorResult = await sensorResponse.json().catch(() => ({}))
+        if (sensorResult.status) setSensorStatus(sensorResult.status as SensorStatus)
+        if (sensorResult.message) setSensorMessage(sensorResult.message)
+        else if (sensorResult.status?.cpuTempAvailable || sensorResult.status?.cpuFanAvailable) setSensorMessage(text.sensorsReconnected)
+        else if (target === 'cpu') setSensorMessage(text.sensorsStillLimited)
+      }
       await fetch('/api/metrics/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -367,7 +382,7 @@ export function Dashboard({ data }: { data: Metrics }) {
   const gpuFanValue = gpuFanAvailable ? `${data.gpu.fan}${gpuFanIsPercent ? '%' : ' RPM'}` : text.fanUnavailable
 
   return <div className="dashboard-grid">
-    {sensorStatus?.installerAvailable && limitedSensors ? (
+    {sensorStatus && limitedSensors ? (
       <section className="sensor-helper-card">
         <div className="sensor-helper-copy">
           <p className="eyebrow">{text.sensorsRecommendation}</p>
@@ -379,7 +394,7 @@ export function Dashboard({ data }: { data: Metrics }) {
         </div>
         <div className="sensor-helper-actions">
           <button className="intensive-button" onClick={() => void reconnectSensors()} disabled={sensorInstalling}>
-            <ShieldCheck size={15}/> {sensorInstalling ? text.sensorsReconnecting : (sensorStatus.taskInstalled ? text.sensorsReconnect : text.sensorsInstall)}
+            <ShieldCheck size={15}/> {sensorInstalling ? text.sensorsReconnecting : (sensorStatus.installerAvailable && !sensorStatus.taskInstalled ? text.sensorsInstall : text.sensorsReconnect)}
           </button>
           <button className="export-report-button" onClick={() => void refreshSensors()} disabled={sensorLoading}>
             <RefreshCw size={15} className={sensorLoading ? 'spin' : undefined}/> {text.sensorsRefresh}

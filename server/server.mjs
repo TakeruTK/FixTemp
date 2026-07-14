@@ -415,6 +415,30 @@ async function refreshCpuSensorFallbacks() {
     metrics.cpu.temperature = fallbackTemperature
     metrics.cpu.temperatureSource = 'systeminformation'
     mark('temperature')
+  } else if (process.platform === 'win32') {
+    const script = `
+$items = Get-CimInstance -Namespace root\\wmi -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue |
+  Where-Object { $_.CurrentTemperature -gt 0 } |
+  ForEach-Object { [math]::Round(($_.CurrentTemperature / 10) - 273.15, 1) } |
+  Where-Object { $_ -ge 10 -and $_ -le 125 }
+@($items) | ConvertTo-Json -Compress
+`
+    const { stdout } = await execFileAsync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], {
+      timeout: 5000,
+      windowsHide: true,
+      maxBuffer: 64 * 1024
+    }).catch(() => ({ stdout: '' }))
+    const raw = stdout.trim()
+    if (raw) {
+      const parsed = parseJsonText(raw)
+      const values = (Array.isArray(parsed) ? parsed : [parsed]).map(Number).filter(Number.isFinite)
+      const acpiTemperature = finiteAverage(values)
+      if (acpiTemperature !== null) {
+        metrics.cpu.temperature = acpiTemperature
+        metrics.cpu.temperatureSource = 'Windows ACPI'
+        mark('temperature')
+      }
+    }
   }
   await refreshWindowsCpuFanFallback().catch(() => {})
 }
@@ -1231,13 +1255,36 @@ app.post('/api/sensors/install', async (_req, res) => {
 
 app.post('/api/sensors/reconnect', async (_req, res) => {
   if (process.platform !== 'win32') {
-    await ensureFreshCpuSnapshot(0).catch(() => {})
+    await Promise.allSettled([
+      refreshCpuSensorFallbacks(),
+      refreshBasicGpuSnapshot(true),
+      refreshMemorySnapshot(),
+      refreshStorageSnapshot()
+    ])
     return res.json({ reconnected: true, needsElevation: false, status: buildSensorStatus() })
   }
 
   if (!sensorTaskPath || !existsSync(sensorTaskPath)) {
     if (!sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
-      res.status(400).json({ error: 'El instalador de sensores no esta disponible en este equipo.' })
+      if (state.sensorProcess) {
+        state.sensorProcess.kill()
+        state.sensorProcess = null
+      }
+      startSensorFallback()
+      await Promise.allSettled([
+        refreshCpuSensorFallbacks(),
+        refreshBasicGpuSnapshot(true),
+        refreshMemorySnapshot(),
+        refreshStorageSnapshot(),
+        refreshDiskLayoutSnapshot()
+      ])
+      res.json({
+        reconnected: false,
+        needsElevation: false,
+        limited: true,
+        message: 'FixTemp intento fuentes seguras de Windows. Para temperatura real de CPU y ventiladores se necesita el lector avanzado firmado.',
+        status: buildSensorStatus()
+      })
       return
     }
     try {
@@ -1257,9 +1304,27 @@ app.post('/api/sensors/reconnect', async (_req, res) => {
     await ensureFreshCpuSnapshot(0).catch(() => {})
     const result = await waitForSensorConfirmation()
     if (!result.confirmed) startSensorFallback()
-    res.json({ reconnected: result.confirmed, needsElevation: false, status: result.status })
+    await Promise.allSettled([refreshCpuSensorFallbacks(), refreshBasicGpuSnapshot(true)])
+    res.json({
+      reconnected: result.confirmed,
+      needsElevation: false,
+      limited: !result.confirmed,
+      message: result.confirmed ? null : 'FixTemp intento reconectar el lector avanzado y fuentes seguras de Windows. No hubo confirmacion de temperatura real de CPU ni ventilador.',
+      status: buildSensorStatus()
+    })
   } catch (error) {
     startSensorFallback()
+    if (!sensorInstallScriptPath || !existsSync(sensorInstallScriptPath)) {
+      await Promise.allSettled([refreshCpuSensorFallbacks(), refreshBasicGpuSnapshot(true)])
+      res.json({
+        reconnected: false,
+        needsElevation: false,
+        limited: true,
+        message: 'FixTemp intento fuentes seguras de Windows. Para temperatura real de CPU y ventiladores se necesita el lector avanzado firmado.',
+        status: buildSensorStatus()
+      })
+      return
+    }
     try {
       const launch = await launchElevatedSensorInstaller(`Reconectar sensores requiere elevacion despues de error: ${error instanceof Error ? error.message : 'desconocido'}`)
       res.json({ needsElevation: true, ...launch, status: buildSensorStatus() })
