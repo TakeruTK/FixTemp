@@ -6,9 +6,9 @@ import path from 'node:path'
 
 const execFileAsync = promisify(execFile)
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-const helper = path.resolve('sensor-helper/publish/win-x64/PulseGuard.Sensors.exe')
+const helper = path.resolve('sensor-helper/publish/win-x64/FixTemp.Sensors.exe')
 const fixtureRoot = path.resolve('tests/.sensor-programdata')
-const snapshotPath = path.join(fixtureRoot, 'PulseGuard', 'sensors.json')
+const snapshotPath = path.join(fixtureRoot, 'FixTemp', 'sensors.json')
 const API = 'http://127.0.0.1:4322'
 
 async function writeSnapshot(temperature, clock, power, fan = 0) {
@@ -54,19 +54,19 @@ try {
   await writeSnapshot(55.4, 3800, 46.8)
   server = spawn(process.execPath, ['server/server.mjs'], {
     cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true,
-    env: { ...process.env, PULSEGUARD_PROGRAMDATA: fixtureRoot, PULSEGUARD_PORT: '4322', PULSEGUARD_DISABLE_NVIDIA_SMI: '1', PULSEGUARD_DISABLE_FAN_WMI: '1' }
+    env: { ...process.env, FIXTEMP_PROGRAMDATA: fixtureRoot, FIXTEMP_PORT: '4322', FIXTEMP_DISABLE_NVIDIA_SMI: '1', FIXTEMP_DISABLE_FAN_WMI: '1', FIXTEMP_DISABLE_SENSOR_HELPER: '1' }
   })
   await waitForServer(); await sleep(1600)
   const first = await (await fetch(`${API}/api/metrics`)).json()
   assert.equal(first.cpu.temperature, 55.4)
   assert.equal(first.cpu.clock, 3800)
   assert.equal(first.cpu.power, 46.8)
-  assert.equal(first.cpu.fan, 0)
+  assert.equal(first.cpu.fan, null)
   assert.equal(first.cpu.powerEstimated, false)
   assert.equal(first.hardwareSensor.status, 'active')
   assert.equal(first.quality.temperature.source, 'CPU Package')
-  assert.equal(first.quality.cpuFan.source, 'Nuvoton NCT6798D - CPU Fan')
-  assert.equal(first.capabilities.cpu.fan, true)
+  assert.equal(first.quality.cpuFan.source, 'unavailable')
+  assert.equal(first.capabilities.cpu.fan, false)
   assert.equal(first.gpu.model, 'AMD Radeon de prueba')
   assert.equal(first.gpu.temperature, 49)
   assert.equal(first.gpu.power, 82.4)

@@ -57,6 +57,10 @@ WriteLog "Relanzador silencioso iniciado: " & app
 WScript.Sleep 12000
 Dim i
 For i = 1 To 10
+  If IsRunning() Then
+    WriteLog "FixTemp ya esta abierto; no se relanza de nuevo"
+    Exit For
+  End If
   If fso.FileExists(app) Then
     shell.Run """" & app & """", 1, False
     WriteLog "Intento de relanzar FixTemp #" & i
@@ -70,6 +74,14 @@ If startupLink <> "" Then
   If fso.FileExists(startupLink) Then fso.DeleteFile startupLink, True
 End If
 fso.DeleteFile WScript.ScriptFullName, True
+
+Function IsRunning()
+  On Error Resume Next
+  Dim svc, processes
+  Set svc = GetObject("winmgmts:\\.\root\cimv2")
+  Set processes = svc.ExecQuery("SELECT ProcessId FROM Win32_Process WHERE Name='FixTemp.exe'")
+  IsRunning = processes.Count > 0
+End Function
 "@
     Set-Content -LiteralPath $launcherPath -Value $launcher -Encoding ASCII -Force
 

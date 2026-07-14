@@ -6,7 +6,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const normalizeMount = mount => process.platform === 'win32' ? String(mount || '').toUpperCase() : String(mount || '')
 const server = spawn(process.execPath, ['server/server.mjs'], {
   cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true,
-  env: { ...process.env, PULSEGUARD_PORT: '4327', PULSEGUARD_BENCHMARK_MB: '32' }
+  env: { ...process.env, FIXTEMP_PORT: '4327', FIXTEMP_BENCHMARK_MB: '32' }
 })
 
 try {
@@ -55,7 +55,7 @@ try {
   const reportResponse = await fetch(`${API}/api/report`)
   assert.equal(reportResponse.status, 200)
   const report = await reportResponse.json()
-  assert.ok(report.app?.version, 'El informe debe incluir la version de PulseGuard')
+  assert.ok(report.app?.version, 'El informe debe incluir la version de FixTemp')
   assert.ok(report.system?.cpu?.brand, 'El informe debe incluir inventario del sistema')
   assert.ok(Array.isArray(report.notes) && report.notes.length >= 2, 'El informe debe describir su contenido')
   assert.equal(normalizeMount(report.storageBenchmark.results[0].mount), normalizeMount(benchmark.mount))

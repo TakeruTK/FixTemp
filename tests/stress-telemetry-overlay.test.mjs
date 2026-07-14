@@ -5,7 +5,7 @@ const API = 'http://127.0.0.1:4326'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const server = spawn(process.execPath, ['server/server.mjs'], {
   cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true,
-  env: { ...process.env, PULSEGUARD_PORT: '4326', PULSEGUARD_TEST_ALLOW_NO_TEMP: '1' }
+  env: { ...process.env, FIXTEMP_PORT: '4326', FIXTEMP_TEST_ALLOW_NO_TEMP: '1' }
 })
 
 async function waitForServer() {

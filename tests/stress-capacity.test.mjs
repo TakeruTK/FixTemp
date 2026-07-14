@@ -6,7 +6,7 @@ import path from 'node:path'
 
 const API = 'http://127.0.0.1:4321'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-const server = spawn(process.execPath, ['server/server.mjs'], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: { ...process.env, PULSEGUARD_PORT: '4321', PULSEGUARD_TEST_ALLOW_NO_TEMP: '1' } })
+const server = spawn(process.execPath, ['server/server.mjs'], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: { ...process.env, FIXTEMP_PORT: '4321', FIXTEMP_TEST_ALLOW_NO_TEMP: '1' } })
 
 async function waitForServer() {
   for (let i = 0; i < 40; i++) { try { if ((await fetch(`${API}/api/metrics`)).ok) return } catch {} await sleep(250) }

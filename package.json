@@ -1,6 +1,6 @@
 {
   "name": "fixtemp-monitor",
-  "version": "0.6.22",
+  "version": "0.6.23",
   "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
   "author": {
     "name": "FixPC",
@@ -63,7 +63,7 @@
     "win": {
       "target": ["nsis"],
       "icon": "assets/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator",
+      "requestedExecutionLevel": "asInvoker",
       "extraResources": [{ "from": "sensor-helper/publish/win-x64", "to": "sensor-helper" }]
     },
     "linux": {
@@ -73,7 +73,7 @@
     },
     "nsis": {
       "oneClick": false,
-      "perMachine": true,
+      "perMachine": false,
       "include": "build/installer.nsh",
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,

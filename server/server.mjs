@@ -29,7 +29,7 @@ const windowsProgramDataPath = process.env.FIXTEMP_PROGRAMDATA || process.env.Pr
 const hardwareSnapshotPath = process.platform === 'win32'
   ? path.join(windowsProgramDataPath, 'FixTemp', 'sensors.json')
   : null
-const sensorHelperPath = process.platform === 'win32'
+const sensorHelperPath = process.platform === 'win32' && process.env.FIXTEMP_DISABLE_SENSOR_HELPER !== '1'
   ? (process.resourcesPath && runtimeDir.includes('app.asar')
       ? path.join(process.resourcesPath, 'sensor-helper', 'FixTemp.Sensors.exe')
       : path.resolve(runtimeDir, '../sensor-helper/publish/win-x64/FixTemp.Sensors.exe'))
@@ -161,7 +161,7 @@ const cpuFanRank = (sensor) => {
 }
 const normalizeFanSensor = (sensor) => {
   const value = sensorValue(sensor)
-  if (value === null || value < 0) return null
+  if (value === null || value <= 0) return null
   return {
     value,
     source: typeof sensor?.source === 'string' && sensor.source.trim() ? sensor.source : null,
@@ -960,7 +960,7 @@ app.get('/api/sensors/status', (_req, res) => {
     helperAvailable: Boolean(sensorHelperPath && existsSync(sensorHelperPath)),
     installerAvailable: Boolean(sensorInstallScriptPath && existsSync(sensorInstallScriptPath)),
     directActive: state.hardwareSensor.status === 'active',
-    cpuFanAvailable: metrics.cpu.fan !== null,
+    cpuFanAvailable: metrics.cpu.fan !== null && metrics.cpu.fan > 0,
     cpuFanSource: metrics.cpu.fanSource || null,
     cpuFanCandidates: state.cpuFanCandidates,
     cpuTempAvailable: metrics.cpu.temperature !== null,
@@ -1595,6 +1595,7 @@ app.post('/api/update/download', (req, res) => {
 })
 
 const psQuote = value => `'${String(value).replace(/'/g, "''")}'`
+const vbsQuote = value => String(value).replace(/"/g, '""')
 
 app.post('/api/update/install', (req, res) => {
   if (process.platform !== 'win32') return res.status(400).json({ error: 'La instalación automática de actualizaciones está disponible actualmente sólo en Windows.' })
@@ -1604,12 +1605,41 @@ app.post('/api/update/install', (req, res) => {
   setTimeout(async () => {
     const directLogPath = path.join(windowsProgramDataPath, 'FixTemp', 'update-install.log')
     await mkdir(path.dirname(directLogPath), { recursive: true })
-    await writeFile(directLogPath, `${new Date().toISOString()} Lanzando instalador directo: ${filePath}\r\n`, { flag: 'a' })
-    const installerProcess = spawn(filePath, ['/S'], { detached: true, stdio: 'ignore', windowsHide: true })
+    const relaunchTarget = appExecutablePath && existsSync(appExecutablePath) ? appExecutablePath : path.join(process.env.ProgramFiles || appInstallDir, 'FixTemp', 'FixTemp.exe')
+    const updaterScriptPath = path.join(os.tmpdir(), 'FixTemp-Apply-Update.vbs')
+    const updaterScript = [
+      'On Error Resume Next',
+      'Dim shell, fso, logFile, log, installer, appPath, exitCode',
+      'Set shell = CreateObject("WScript.Shell")',
+      'Set fso = CreateObject("Scripting.FileSystemObject")',
+      `installer = "${vbsQuote(filePath)}"`,
+      `appPath = "${vbsQuote(relaunchTarget)}"`,
+      `logFile = "${vbsQuote(directLogPath)}"`,
+      'Sub WriteLog(message)',
+      '  On Error Resume Next',
+      '  Set log = fso.OpenTextFile(logFile, 8, True)',
+      '  log.WriteLine Now & " " & message',
+      '  log.Close',
+      'End Sub',
+      'WriteLog "Actualizador silencioso iniciado: " & installer',
+      'WScript.Sleep 2500',
+      'exitCode = shell.Run("""" & installer & """ /S", 0, True)',
+      'WriteLog "Instalador terminado con codigo " & exitCode',
+      'WScript.Sleep 3500',
+      'If fso.FileExists(appPath) Then',
+      '  shell.Run """" & appPath & """", 1, False',
+      '  WriteLog "FixTemp relanzado: " & appPath',
+      'Else',
+      '  WriteLog "No se encontro FixTemp para relanzar: " & appPath',
+      'End If',
+      'fso.DeleteFile WScript.ScriptFullName, True'
+    ].join('\r\n')
+    await writeFile(updaterScriptPath, updaterScript, 'utf8')
+    await writeFile(directLogPath, `${new Date().toISOString()} Lanzando actualizador silencioso: ${updaterScriptPath}\r\n`, { flag: 'a' })
+    const installerProcess = spawn(path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'wscript.exe'), ['//B', '//Nologo', updaterScriptPath], { detached: true, stdio: 'ignore', windowsHide: true })
     installerProcess.unref()
     process.exit(0)
     return
-    const relaunchTarget = appExecutablePath && existsSync(appExecutablePath) ? appExecutablePath : path.join(process.env.ProgramFiles || appInstallDir, 'FixTemp', 'FixTemp.exe')
     const updateScriptPath = path.join(os.tmpdir(), 'FixTemp-Apply-Update.ps1')
     const logPath = path.join(windowsProgramDataPath, 'FixTemp', 'update-install.log')
     const script = [

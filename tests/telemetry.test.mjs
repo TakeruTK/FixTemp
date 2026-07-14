@@ -36,7 +36,7 @@ try {
     const existing = await fetch(`${API}/api/metrics`)
     if (!existing.ok) throw new Error()
   } catch {
-    server = spawn(process.execPath, ['server/server.mjs'], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: { ...process.env, PULSEGUARD_PORT: '4320', PULSEGUARD_TEST_ALLOW_NO_TEMP: '1' } })
+    server = spawn(process.execPath, ['server/server.mjs'], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, env: { ...process.env, FIXTEMP_PORT: '4320', FIXTEMP_TEST_ALLOW_NO_TEMP: '1' } })
     await waitForServer()
   }
 
