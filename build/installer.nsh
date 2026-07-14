@@ -12,6 +12,9 @@ Var StartWithWindows
   nsExec::ExecToStack 'taskkill /IM PulseGuard.exe /F'
   Pop $0
   Pop $1
+  nsExec::ExecToStack 'taskkill /IM FixTemp.Sensors.exe /F'
+  Pop $0
+  Pop $1
   StrCpy $StartWithWindows "0"
 !macroend
 
@@ -47,23 +50,28 @@ FunctionEnd
 !macro customInstall
   Delete "$SMSTARTUP\FixTemp-Relaunch.lnk"
   Delete "$SMSTARTUP\FixTemp.lnk"
-  ${If} $StartWithWindows == "1"
-    CreateShortCut "$SMSTARTUP\FixTemp.lnk" "$INSTDIR\FixTemp.exe"
-    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -EnableAppStartup -RelaunchApp'
-  ${Else}
-    nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -RelaunchApp'
-  ${EndIf}
+  RMDir /r "$INSTDIR\resources\sensor-helper"
+  nsExec::ExecToStack 'schtasks /Delete /TN "FixTemp Sensors" /F'
   Pop $0
   Pop $1
-  ${If} $0 != 0
-    DetailPrint "FixTemp se instalo, pero el lector avanzado de sensores no pudo activarse. La aplicacion se abrira en modo limitado."
+  nsExec::ExecToStack 'schtasks /Delete /TN "PulseGuard Sensors" /F'
+  Pop $0
+  Pop $1
+  ${If} $StartWithWindows == "1"
+    CreateShortCut "$SMSTARTUP\FixTemp.lnk" "$INSTDIR\FixTemp.exe"
   ${EndIf}
 !macroend
 
 !endif
 
 !macro customUnInstall
-  nsExec::ExecToStack '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$INSTDIR\resources\sensor-helper\install-sensors.ps1" -InstallDir "$INSTDIR" -Uninstall'
+  nsExec::ExecToStack 'taskkill /IM FixTemp.Sensors.exe /F'
+  Pop $0
+  Pop $1
+  nsExec::ExecToStack 'schtasks /Delete /TN "FixTemp Sensors" /F'
+  Pop $0
+  Pop $1
+  nsExec::ExecToStack 'schtasks /Delete /TN "PulseGuard Sensors" /F'
   Pop $0
   Pop $1
 !macroend

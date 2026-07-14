@@ -1,6 +1,6 @@
 {
   "name": "fixtemp-monitor",
-  "version": "0.6.27",
+  "version": "0.6.28",
   "description": "Monitor, inventario y pruebas de estabilidad para equipos Windows y Linux",
   "author": {
     "name": "FixPC",
@@ -23,7 +23,7 @@
     "test:inventory": "node tests/inventory.test.mjs",
     "build:sensors": "dotnet publish sensor-helper/FixTemp.Sensors.csproj -c Release -r win-x64 --self-contained true -o sensor-helper/publish/win-x64 --no-restore && node sensor-helper/copy-assets.mjs",
     "bundle:server": "esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs",
-    "dist:win": "vite build && dotnet publish sensor-helper/FixTemp.Sensors.csproj -c Release -r win-x64 --self-contained true -o sensor-helper/publish/win-x64 --no-restore && node sensor-helper/copy-assets.mjs && esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs && electron-builder --win nsis",
+    "dist:win": "vite build && esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs && electron-builder --win nsis",
     "dist:linux": "vite build && esbuild server/server.mjs server/stress-worker.mjs --bundle --platform=node --format=cjs --target=node22 --outdir=build-server --entry-names=[name] --out-extension:.js=.cjs && electron-builder --linux AppImage tar.gz"
   },
   "devDependencies": {
@@ -63,8 +63,7 @@
     "win": {
       "target": ["nsis"],
       "icon": "assets/icon.ico",
-      "requestedExecutionLevel": "asInvoker",
-      "extraResources": [{ "from": "sensor-helper/publish/win-x64", "to": "sensor-helper" }]
+      "requestedExecutionLevel": "asInvoker"
     },
     "linux": {
       "target": ["AppImage", "tar.gz"],
