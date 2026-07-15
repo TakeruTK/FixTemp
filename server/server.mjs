@@ -478,7 +478,18 @@ function startSensorFallback() {
   })
   child.once('exit', () => { if (state.sensorProcess === child) state.sensorProcess = null })
 }
-if (sensorHelperPath && existsSync(sensorHelperPath)) setTimeout(startSensorFallback, 4000).unref()
+if (sensorHelperPath && existsSync(sensorHelperPath)) {
+  setTimeout(startSensorFallback, 250).unref()
+  setTimeout(() => {
+    void Promise.allSettled([
+      refreshCpuSensorFallbacks(),
+      refreshBasicGpuSnapshot(true),
+      refreshMemorySnapshot(),
+      refreshStorageSnapshot(),
+      refreshDiskLayoutSnapshot()
+    ])
+  }, 900).unref()
+}
 
 function restartSensorReader(reason = 'watchdog') {
   const now = Date.now()

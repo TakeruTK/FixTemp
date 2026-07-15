@@ -1,5 +1,5 @@
 import { startTransition, useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, Clock3, HardDrive, MemoryStick, Radio, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ArrowDown, ArrowUp, Clock3, HardDrive, MemoryStick, Radio, RefreshCw } from 'lucide-react'
 import { useI18n } from '../i18n'
 import type { Metrics } from '../types'
 import { MetricCard } from './MetricCard'
@@ -8,22 +8,6 @@ import { Gauge } from './Gauge'
 interface ProcessSnapshot {
   processes: Metrics['processes']
   uptime: number
-}
-
-interface SensorStatus {
-  helperAvailable: boolean
-  installerAvailable: boolean
-  directActive: boolean
-  taskInstalled?: boolean
-  snapshotExists?: boolean
-  cpuFanAvailable: boolean
-  cpuFanSource?: string | null
-  cpuFanCandidates?: { value: number; source?: string | null; name?: string | null; type?: string | null }[]
-  cpuTempAvailable: boolean
-  source: string | null
-  error?: string | null
-  message?: string | null
-  limited?: boolean
 }
 
 const formatRate = (kb: number) => kb > 1024 ? `${(kb / 1024).toFixed(1)} MB/s` : `${kb} KB/s`
@@ -204,10 +188,6 @@ export function Dashboard({ data }: { data: Metrics }) {
   const text = copy[language]
   const [processes, setProcesses] = useState<Metrics['processes']>([])
   const [processUptime, setProcessUptime] = useState(data.hardware.uptime)
-  const [sensorStatus, setSensorStatus] = useState<SensorStatus | null>(null)
-  const [sensorLoading, setSensorLoading] = useState(false)
-  const [sensorInstalling, setSensorInstalling] = useState(false)
-  const [sensorMessage, setSensorMessage] = useState<string | null>(null)
   const [refreshingMeter, setRefreshingMeter] = useState<string | null>(null)
 
   useEffect(() => {
@@ -244,105 +224,16 @@ export function Dashboard({ data }: { data: Metrics }) {
     }
   }, [data.hardware.uptime])
 
-  useEffect(() => {
-    let active = true
-    let timer = 0
-
-    const loadStatus = async (withSpinner = false) => {
-      if (withSpinner) setSensorLoading(true)
-      try {
-        const response = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
-        if (!response.ok) throw new Error()
-        const result = await response.json() as SensorStatus
-        if (!active) return
-        setSensorStatus(result)
-        if (!result.error) setSensorMessage(null)
-      } catch {
-        if (active) setSensorMessage(text.sensorsError)
-      } finally {
-        if (active && withSpinner) setSensorLoading(false)
-      }
-    }
-
-    const poll = async () => {
-      await loadStatus(timer === 0)
-      if (!active) return
-      const limited = !sensorStatus?.directActive || !sensorStatus?.cpuTempAvailable
-      timer = window.setTimeout(poll, limited ? 12000 : 30000)
-    }
-
-    void poll()
-    return () => {
-      active = false
-      window.clearTimeout(timer)
-    }
-  }, [language, sensorStatus?.cpuFanAvailable, sensorStatus?.cpuTempAvailable, sensorStatus?.directActive, text.sensorsError])
-
-  const reconnectSensors = async () => {
-    setSensorInstalling(true)
-    try {
-      const response = await fetch('/api/sensors/reconnect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}'
-      })
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || text.sensorsError)
-      if (result.status) setSensorStatus(result.status as SensorStatus)
-      if (result.needsElevation) {
-        setSensorMessage(text.sensorsNeedsElevation)
-        for (let attempt = 0; attempt < 30; attempt++) {
-          await new Promise(resolve => window.setTimeout(resolve, 2000))
-          const statusResponse = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
-          if (!statusResponse.ok) continue
-          const status = await statusResponse.json() as SensorStatus
-          setSensorStatus(status)
-          if (status.directActive && status.cpuTempAvailable) {
-            setSensorMessage(text.sensorsActivated)
-            return
-          }
-        }
-        setSensorMessage(text.sensorsStillLimited)
-        return
-      }
-      setSensorMessage(result.message || (result.reconnected || result.status?.cpuTempAvailable ? text.sensorsReconnected : text.sensorsStillLimited))
-    } catch (error) {
-      setSensorMessage(error instanceof Error ? error.message : text.sensorsError)
-    } finally {
-      setSensorInstalling(false)
-    }
-  }
-
-  const refreshSensors = async () => {
-    setSensorLoading(true)
-    try {
-      const response = await fetch('/api/sensors/status', { signal: AbortSignal.timeout(7000) })
-      if (!response.ok) throw new Error()
-      const result = await response.json() as SensorStatus
-      setSensorStatus(result)
-      if (!result.error) setSensorMessage(null)
-    } catch {
-      setSensorMessage(text.sensorsError)
-    } finally {
-      setSensorLoading(false)
-    }
-  }
-
   const refreshMeter = async (target: 'cpu' | 'gpu' | 'memory' | 'network' | 'storage') => {
     setRefreshingMeter(target)
     try {
       if (target === 'cpu' || target === 'gpu') {
-        const sensorResponse = await fetch('/api/sensors/reconnect', {
+        await fetch('/api/sensors/reconnect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: '{}',
           signal: AbortSignal.timeout(15000)
         })
-        const sensorResult = await sensorResponse.json().catch(() => ({}))
-        if (sensorResult.status) setSensorStatus(sensorResult.status as SensorStatus)
-        if (sensorResult.message) setSensorMessage(sensorResult.message)
-        else if (sensorResult.status?.cpuTempAvailable || sensorResult.status?.cpuFanAvailable) setSensorMessage(text.sensorsReconnected)
-        else if (target === 'cpu') setSensorMessage(text.sensorsStillLimited)
       }
       await fetch('/api/metrics/refresh', {
         method: 'POST',
@@ -363,7 +254,6 @@ export function Dashboard({ data }: { data: Metrics }) {
   )
 
   const directSensor = data.hardwareSensor?.status === 'active'
-  const limitedSensors = !sensorStatus?.directActive || !sensorStatus?.cpuTempAvailable
   const cpuClockRange = data.cpu.clockMin && data.cpu.clockMax && Math.abs(data.cpu.clockMax - data.cpu.clockMin) >= 5
     ? ` · ${data.cpu.clockMin}–${data.cpu.clockMax}` : ''
   const cpuClock = data.cpu.clock !== null ? `${data.cpu.clock} MHz${cpuClockRange}` : text.sensorNA
@@ -382,64 +272,6 @@ export function Dashboard({ data }: { data: Metrics }) {
   const gpuFanValue = gpuFanAvailable ? `${data.gpu.fan}${gpuFanIsPercent ? '%' : ' RPM'}` : text.fanUnavailable
 
   return <div className="dashboard-grid">
-    {sensorStatus && limitedSensors ? (
-      <section className="sensor-helper-card sensor-helper-card--compact">
-        <div className="sensor-helper-copy">
-          <p className="eyebrow">{text.sensorsLimited}</p>
-          <h3>{text.sensorsReconnect}</h3>
-          <div className="sensor-status-pills">
-            <span>CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}</span>
-            <span>CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}</span>
-            <span>{text.sensorsSnapshot}: {sensorStatus.snapshotExists ? text.okShort : text.missingShort}</span>
-          </div>
-          {sensorMessage ? <span className="sensor-helper-note">{sensorMessage}</span> : null}
-        </div>
-        <div className="sensor-helper-actions">
-          <button className="intensive-button" onClick={() => void reconnectSensors()} disabled={sensorInstalling}>
-            <ShieldCheck size={15}/> {sensorInstalling ? text.sensorsReconnecting : (sensorStatus.installerAvailable && !sensorStatus.taskInstalled ? text.sensorsInstall : text.sensorsReconnect)}
-          </button>
-          <button className="export-report-button" onClick={() => void refreshSensors()} disabled={sensorLoading}>
-            <RefreshCw size={15} className={sensorLoading ? 'spin' : undefined}/> {text.sensorsRefresh}
-          </button>
-          <div className="sensor-helper-status">
-            <b>{text.sensorsLimited}</b>
-            <small>
-              CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}
-              {' · '}
-              CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}
-              {' | '}
-              {text.sensorsTask}: {sensorStatus.taskInstalled ? text.okShort : text.missingShort}
-              {' | '}
-              {text.sensorsSnapshot}: {sensorStatus.snapshotExists ? text.okShort : text.missingShort}
-            </small>
-          </div>
-        </div>
-      </section>
-    ) : sensorStatus?.directActive ? (
-      <section className="sensor-helper-card sensor-helper-card--ready">
-        <div className="sensor-helper-copy">
-          <p className="eyebrow">{text.sensorsRecommendation}</p>
-          <h3>{text.sensorsReady}</h3>
-          <p>{text.sensorsReadyText}</p>
-          {sensorStatus.source ? <span>{text.sensorsSource}: {sensorStatus.source}</span> : null}
-          {sensorMessage ? <span className="sensor-helper-note">{sensorMessage}</span> : null}
-        </div>
-        <div className="sensor-helper-actions">
-          <button className="export-report-button" onClick={() => void reconnectSensors()} disabled={sensorInstalling}>
-            <RefreshCw size={15} className={sensorInstalling ? 'spin' : undefined}/> {sensorInstalling ? text.sensorsReconnecting : text.sensorsReconnect}
-          </button>
-          <div className="sensor-helper-status">
-            <b>{text.sensorsReady}</b>
-            <small>
-              CPU temp: {sensorStatus.cpuTempAvailable ? text.okShort : text.missingShort}
-              {' | '}
-              CPU fan: {sensorStatus.cpuFanAvailable ? text.okShort : text.missingShort}
-            </small>
-          </div>
-        </div>
-      </section>
-    ) : null}
-
     <MetricCard
       title="CPU"
       subtitle={data.cpu.model || text.processor}
