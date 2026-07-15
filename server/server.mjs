@@ -142,6 +142,7 @@ const state = {
   agent: { cpu: 0, memoryMb: 0, updatedAt: Date.now() },
   hardwareSensor: { status: 'starting', source: null, error: null, updatedAt: 0 },
   sensorProcess: null,
+  sensorWatchdog: { lastAdvancedCpuAt: 0, lastRestartAt: 0, restarts: 0 },
   cpuFanCandidates: [],
   systemDetails: null,
   systemDetailsPromise: null,
@@ -337,6 +338,9 @@ const applyHardwareSnapshot = (snapshot, source) => {
   } else if (Date.now() - (state.sensorUpdatedAt.fan || 0) > 5000) {
     clearCpuFan()
   }
+  if (hasTemperature || hasFan) {
+    state.sensorWatchdog.lastAdvancedCpuAt = observedAt
+  }
   if (cpu.model) metrics.cpu.model = cpu.model
   const hasGpuHardware = applyGpuSnapshot(snapshot.gpus, observedAt)
   const hasAnyCpuHardware = hasTemperature || hasPower || hasFan
@@ -476,6 +480,37 @@ function startSensorFallback() {
 }
 if (sensorHelperPath && existsSync(sensorHelperPath)) setTimeout(startSensorFallback, 4000).unref()
 
+function restartSensorReader(reason = 'watchdog') {
+  const now = Date.now()
+  if (now - state.sensorWatchdog.lastRestartAt < 30000) return
+  state.sensorWatchdog.lastRestartAt = now
+  state.sensorWatchdog.restarts += 1
+  state.hardwareSensor = { ...state.hardwareSensor, status: 'reconnecting', error: `Reiniciando lector local: ${reason}` }
+  if (state.sensorProcess) {
+    const child = state.sensorProcess
+    state.sensorProcess = null
+    try { child.kill() } catch {}
+  }
+  setTimeout(startSensorFallback, 800).unref()
+  if (process.platform === 'win32' && sensorTaskPath && existsSync(sensorTaskPath)) {
+    void startSensorTaskNow().catch(() => {})
+  }
+}
+
+repeat(async () => {
+  if (!sensorHelperPath || !existsSync(sensorHelperPath)) return
+  const now = Date.now()
+  const hasRecoveredCpuBefore = state.sensorWatchdog.lastAdvancedCpuAt > 0
+  const advancedCpuMissing = metrics.cpu.temperature === null && (metrics.cpu.fan === null || metrics.cpu.fan <= 0)
+  const gpuStillStreaming = metrics.gpu.temperature !== null && now - (state.sensorUpdatedAt.gpu || 0) < 15000
+  const cpuMissingFor = now - state.sensorWatchdog.lastAdvancedCpuAt
+  if (hasRecoveredCpuBefore && advancedCpuMissing && gpuStillStreaming && cpuMissingFor > 15000) {
+    restartSensorReader('CPU avanzada dejo de entregar datos')
+  } else if (!state.sensorProcess && (!state.hardwareSensor.updatedAt || now - state.hardwareSensor.updatedAt > 10000)) {
+    startSensorFallback()
+  }
+}, cadence(10000, 30000), 15000)
+
 const buildSensorStatus = () => ({
   helperAvailable: Boolean(sensorHelperPath && existsSync(sensorHelperPath)),
   installerAvailable: Boolean(sensorInstallScriptPath && existsSync(sensorInstallScriptPath)),
@@ -490,6 +525,7 @@ const buildSensorStatus = () => ({
   cpuTempAvailable: metrics.cpu.temperature !== null,
   gpuTempAvailable: metrics.gpu.temperature !== null,
   gpuSource: state.gpuSource || null,
+  watchdogRestarts: state.sensorWatchdog.restarts,
   source: state.hardwareSensor.source || null,
   error: state.hardwareSensor.error || null
 })
