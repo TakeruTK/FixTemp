@@ -449,13 +449,15 @@ $items = Get-CimInstance -Namespace root\\wmi -ClassName MSAcpi_ThermalZoneTempe
   await refreshWindowsCpuFanFallback().catch(() => {})
 }
 
-repeat(async () => {
+async function refreshHardwareSnapshotFile() {
   if (!hardwareSnapshotPath) return
   try {
     const snapshot = parseJsonText(await readFile(hardwareSnapshotPath, 'utf8'))
-    applyHardwareSnapshot(snapshot, 'LibreHardwareMonitor + PawnIO · SYSTEM')
+    applyHardwareSnapshot(snapshot, 'LibreHardwareMonitor + PawnIO - SYSTEM')
   } catch (error) { invalidateHardwareSnapshot(error); startSensorFallback() }
-}, cadence(1000, 5000), 500)
+}
+
+repeat(refreshHardwareSnapshotFile, cadence(1000, 5000), 500)
 
 function startSensorFallback() {
   if (!sensorHelperPath || !existsSync(sensorHelperPath) || state.sensorProcess) return
@@ -478,17 +480,47 @@ function startSensorFallback() {
   })
   child.once('exit', () => { if (state.sensorProcess === child) state.sensorProcess = null })
 }
+
+let initialSensorWarmupPromise = null
+let initialSensorWarmupDone = false
+
+const hasInitialSensorReading = () =>
+  metrics.cpu.temperature !== null ||
+  metrics.cpu.fan !== null ||
+  metrics.gpu.temperature !== null ||
+  metrics.gpu.clock > 0 ||
+  state.hardwareSensor.status === 'active'
+
+async function warmupSensorsForFirstPaint() {
+  if (initialSensorWarmupDone) return
+  if (!initialSensorWarmupPromise) {
+    initialSensorWarmupPromise = (async () => {
+      if (sensorHelperPath && existsSync(sensorHelperPath)) startSensorFallback()
+      const startedAt = Date.now()
+      while (Date.now() - startedAt < 3500) {
+        await refreshHardwareSnapshotFile().catch(() => {})
+        if (hasInitialSensorReading()) break
+        await Promise.allSettled([
+          refreshCpuSensorFallbacks(),
+          refreshBasicGpuSnapshot(true),
+          refreshMemorySnapshot(),
+          refreshStorageSnapshot(),
+          refreshDiskLayoutSnapshot()
+        ])
+        if (hasInitialSensorReading()) break
+        await new Promise(resolve => setTimeout(resolve, 350))
+      }
+      initialSensorWarmupDone = true
+    })().finally(() => { initialSensorWarmupPromise = null })
+  }
+  await initialSensorWarmupPromise
+}
+
 if (sensorHelperPath && existsSync(sensorHelperPath)) {
   setTimeout(startSensorFallback, 250).unref()
   setTimeout(() => {
-    void Promise.allSettled([
-      refreshCpuSensorFallbacks(),
-      refreshBasicGpuSnapshot(true),
-      refreshMemorySnapshot(),
-      refreshStorageSnapshot(),
-      refreshDiskLayoutSnapshot()
-    ])
-  }, 900).unref()
+    void warmupSensorsForFirstPaint().catch(() => {})
+  }, 500).unref()
 }
 
 function restartSensorReader(reason = 'watchdog') {
@@ -1184,8 +1216,9 @@ function stopStress(reason = 'manual') {
   return state.session
 }
 
-app.get('/api/metrics', (_req, res) => {
+app.get('/api/metrics', async (_req, res) => {
   state.lastClientSeen = Date.now()
+  await warmupSensorsForFirstPaint().catch(() => {})
   const now = Date.now()
   expireStaleCpuHardware(now)
   res.json({
@@ -1217,8 +1250,9 @@ app.get('/api/metrics', (_req, res) => {
   })
 })
 
-app.get('/api/metrics/live', (_req, res) => {
+app.get('/api/metrics/live', async (_req, res) => {
   state.lastClientSeen = Date.now()
+  await warmupSensorsForFirstPaint().catch(() => {})
   const now = Date.now()
   expireStaleCpuHardware(now)
   res.json({
@@ -1277,8 +1311,9 @@ app.post('/api/metrics/refresh', async (req, res) => {
   res.json({ ok: errors.length === 0, target, errors, metrics })
 })
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', async (_req, res) => {
   state.lastClientSeen = Date.now()
+  await warmupSensorsForFirstPaint().catch(() => {})
   res.json({ ok: true, timestamp: Date.now(), uptime: metrics.hardware.uptime })
 })
 
